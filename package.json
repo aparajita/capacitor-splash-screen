@@ -1,7 +1,7 @@
 {
-  "name": "@willsub-npm/capacitor-splashscreen",
+  "name": "@willsub/capacitor-splashscreen",
   "version": "1.0.0",
-  "description": "A better version of the Capacitor SplashScreen plugin",
+  "description": "Provides access to the native biometric auth APIs for Capacitor apps",
   "main": "dist/esm/index.js",
   "module": "dist/esm/index.js",
   "types": "dist/esm/index.d.ts",
