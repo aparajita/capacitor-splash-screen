@@ -5,15 +5,17 @@
 //  Created by Aparajita on 10/13/20.
 //
 
+import Capacitor
+
 extension WSSplashScreen {
   func showOnLaunch() {
     let options = ShowOptions(plugin: self, call: nil, isLaunchSplash: true)
-    showSplash(options, completion: {})
+    showSplash(call: nil, options: options, completion: {})
   }
 
-  func showSplash(_ options: ShowOptions, completion: @escaping () -> Void) {
+  func showSplash(call: CAPPluginCall?, options: ShowOptions, completion: @escaping () -> Void) {
     // If there's no view in which to place the splash screen, bail
-    guard let splashView = self.splashView, let view = self.bridge?.viewController.view else {
+    guard let splashView = self.splashView else {
       return
     }
 
@@ -21,15 +23,22 @@ extension WSSplashScreen {
 
     // We have to use the main thread to show something over the Ionic web view
     DispatchQueue.main.async {
-      if let color = options.backgroundColor {
-        splashView.backgroundColor = UIColor(fromHex: color)
+      guard let view = self.bridge?.viewController.view else {
+        return
+      }
+      
+      if let color = options.backgroundColor,
+         let backgroundColor = UIColor(fromHex: color)
+      {
+        splashView.backgroundColor = backgroundColor
       }
 
+      self.setupImageView(splashView, call)
       splashView.isUserInteractionEnabled = false
       splashView.frame = view.frame
       view.addSubview(splashView)
 
-      self.setupSpinner(view, options)
+      self.setupSpinner(view, call)
       self.showSplashViewWithTransition(view: view, options: options, completion: completion)
     }
   }
@@ -42,7 +51,7 @@ extension WSSplashScreen {
       self.isVisible = true
 
       if options.autoHide {
-        self.hideTask = DispatchQueue.main.asyncAfter(
+        DispatchQueue.main.asyncAfter(
           deadline: DispatchTime.now() + (Double(options.showDuration) / 1000)
         ) {
           self.hideSplash(
@@ -74,13 +83,69 @@ extension WSSplashScreen {
     )
   }
 
-  func setupSpinner(_ view: UIView, _ options: ShowOptions) {
+  func setupImageView(_ view: UIView, _ call: CAPPluginCall?) {
+    guard viewInfo.image != nil else {
+      return
+    }
+
+    if let mode = getConfigString("ios.imageContentMode", call) {
+      var contentMode: UIView.ContentMode
+
+      switch mode {
+      case "fill":
+        contentMode = .scaleToFill
+
+      case "aspectFill":
+        contentMode = .scaleAspectFill
+
+      case "aspectFit":
+        contentMode = .scaleAspectFit
+
+      case "center":
+        contentMode = .center
+
+      case "top":
+        contentMode = .top
+
+      case "bottom":
+        contentMode = .bottom
+
+      case "left":
+        contentMode = .left
+
+      case "right":
+        contentMode = .right
+
+      case "topLeft":
+        contentMode = .topLeft
+
+      case "topRight":
+        contentMode = .topRight
+
+      case "bottomLeft":
+        contentMode = .bottomLeft
+
+      case "bottomRight":
+        contentMode = .bottomRight
+
+      default:
+        contentMode = .scaleAspectFill
+      }
+
+      view.contentMode = contentMode
+    }
+  }
+
+  func setupSpinner(_ view: UIView, _ call: CAPPluginCall?) {
     guard let spinner = self.spinner else {
       return
     }
 
-    if let spinnerStyle = options.spinnerStyle {
-      switch spinnerStyle.lowercased() {
+    let spinnerStyle = getConfigString("ios.spinnerStyle", call)
+    let spinnerColor = getConfigString("spinnerColor", call)
+
+    if let style = spinnerStyle {
+      switch style.lowercased() {
       case "small":
         spinner.style = .white
       default:
@@ -88,8 +153,10 @@ extension WSSplashScreen {
       }
     }
 
-    if let spinnerColor = options.spinnerColor {
-      spinner.color = UIColor(fromHex: spinnerColor)
+    if let color = spinnerColor,
+       let uiColor = UIColor(fromHex: color)
+    {
+      spinner.color = uiColor
     }
 
     view.addSubview(spinner)

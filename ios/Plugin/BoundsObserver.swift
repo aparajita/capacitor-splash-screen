@@ -38,16 +38,17 @@ class BoundsObserver: NSObject {
    * Update the bounds for the splash view
    */
   func updateSplashBounds() {
-    if let view = splash?.splashView {
+    if let splash = self.splash,
+       let view = splash.splashView
+    {
       if view is UIImageView {
-        // If the splash screen is an image, we want it to fill
-        // the entire screen but keep its aspect ratio.
+        // If the splash screen is an image, resize it according to the content mode.
         view.frame = UIScreen.main.bounds
-        view.contentMode = .scaleAspectFill
+        view.contentMode = splash.imageContentMode
       } else {
         // If the splash screen is from a storyboard, size it to the
         // main view so it resizes along with it.
-        if let frame = splash?.bridge?.viewController.view.frame {
+        if let frame = splash.bridge?.viewController.view.frame {
           view.frame = frame
         }
 

@@ -10,31 +10,29 @@ extension WSSplashScreen {
    * Build the views used to display the splash screen.
    */
   func buildViews() {
-    var viewInfo = ViewInfo()
-
     // First support the legacy behavior, an image called "Splash"
-    var found = checkForSplashImage(&viewInfo)
+    var found = checkForSplashImage()
 
     // Next check to see if the launch screen storyboard should be used
     if !found {
-      found = checkForLaunchScreen(&viewInfo)
+      found = checkForLaunchScreen()
     }
 
     // Next look for a custom storyboard. Note that if specified,
     // it must exist or the app will crash.
     if !found {
-      found = checkForCustomStoryboard(&viewInfo)
+      found = checkForCustomStoryboard()
     }
 
     // Next try a custom image
     if !found {
-      found = checkForCustomImage(&viewInfo)
+      found = checkForCustomImage()
     }
 
     if !viewInfo.storyboardName.isEmpty {
-      makeStoryboardSplashView(viewInfo.storyboardName)
+      makeStoryboardSplashView()
     } else if viewInfo.image != nil {
-      makeImageSplashView(viewInfo)
+      makeImageSplashView()
     } else {
       warn("No splash image or storyboard specified")
     }
@@ -50,10 +48,10 @@ extension WSSplashScreen {
   /*
    * Check for an image named "Splash".
    */
-  func checkForSplashImage(_ info: inout ViewInfo) -> Bool {
+  func checkForSplashImage() -> Bool {
     if let image = UIImage(named: "Splash") {
-      info.imageName = "Splash"
-      info.image = image
+      viewInfo.imageName = "Splash"
+      viewInfo.image = image
       return true
     }
 
@@ -63,14 +61,13 @@ extension WSSplashScreen {
   /*
    * If the ios.useLaunchScreen plugin option is true, try to get the app's launch storyboard name.
    */
-  func checkForLaunchScreen(_ info: inout ViewInfo) -> Bool {
-    if getConfigValue("ios.useLaunchScreen") as? Bool ?? false {
-      if let plist = Bundle.main.infoDictionary {
-        if let launchStoryboardName = plist["UILaunchStoryboardName"] as? String {
-          info.storyboardName = launchStoryboardName
-          return true
-        }
-      }
+  func checkForLaunchScreen() -> Bool {
+    if getConfigBool("ios.useLaunchScreen") ?? false,
+       let plist = Bundle.main.infoDictionary,
+       let launchStoryboardName = plist["UILaunchStoryboardName"] as? String
+    {
+      viewInfo.storyboardName = launchStoryboardName
+      return true
     }
 
     return false
@@ -79,9 +76,9 @@ extension WSSplashScreen {
   /*
    * Check for a non-empty ios.storyboard plugin option.
    */
-  func checkForCustomStoryboard(_ info: inout ViewInfo) -> Bool {
-    if let name = getConfigValue("ios.storyboard") as? String {
-      info.storyboardName = name
+  func checkForCustomStoryboard() -> Bool {
+    if let name = getConfigString("ios.storyboard") {
+      viewInfo.storyboardName = name
       return true
     }
 
@@ -92,11 +89,11 @@ extension WSSplashScreen {
    * Check for a non-empty ios.image plugin option. If it exists,
    * attempt to create the named image.
    */
-  func checkForCustomImage(_ info: inout ViewInfo) -> Bool {
-    if let name = getConfigValue("ios.image") as? String {
+  func checkForCustomImage() -> Bool {
+    if let name = getConfigString("image") {
       if let image = UIImage(named: name) {
-        info.imageName = name
-        info.image = image
+        viewInfo.imageName = name
+        viewInfo.image = image
         return true
       }
 
@@ -110,13 +107,12 @@ extension WSSplashScreen {
    * If the showSpinner plugin option is true, create a spinner.
    */
   func checkForSpinner() {
-    showSpinner = getConfigValue("showSpinner") as? Bool ?? false
+    let showSpinner = getConfigBool("showSpinner") ?? false
 
     if showSpinner {
       spinner = UIActivityIndicatorView()
 
       guard let spin = spinner else {
-        showSpinner = false
         return
       }
 
@@ -131,8 +127,8 @@ extension WSSplashScreen {
    *
    * WARNING! If the named storyboard does not exist, this will crash.
    */
-  func makeStoryboardSplashView(_ name: String) {
-    let storyboard = UIStoryboard(name: name, bundle: nil)
+  func makeStoryboardSplashView() {
+    let storyboard = UIStoryboard(name: viewInfo.storyboardName, bundle: nil)
     let viewController = storyboard.instantiateInitialViewController()
 
     if let vcView = viewController?.view {
@@ -141,12 +137,12 @@ extension WSSplashScreen {
       splashView = NSKeyedUnarchiver.unarchiveObject(with: archive) as? UIView
 
       if splashView != nil {
-        info("Using storyboard \"\(name)\"")
+        info("Using storyboard \"\(viewInfo.storyboardName)\"")
       } else {
-        error("Unable to clone the \"\(name)\" storyboard view")
+        error("Unable to clone the \"\(viewInfo.storyboardName)\" storyboard view")
       }
     } else {
-      error("Unable to instantiate the \"\(name)\" storyboard view controller")
+      error("Unable to instantiate the \"\(viewInfo.storyboardName)\" storyboard view controller")
     }
   }
 
@@ -155,12 +151,8 @@ extension WSSplashScreen {
    * If the backgroundColor plugin option is set, use that as the background color
    * of the splash view.
    */
-  func makeImageSplashView(_ info: ViewInfo) {
-    splashView = UIImageView(image: info.image)
-    self.info("Using image \"\(info.imageName)\"")
-
-    if let backgroundColor = getConfigValue("backgroundColor") as? String, let view = splashView {
-      view.backgroundColor = UIColor(fromHex: backgroundColor)
-    }
+  func makeImageSplashView() {
+    splashView = UIImageView(image: viewInfo.image)
+    self.info("Using image \"\(viewInfo.imageName)\"")
   }
 }

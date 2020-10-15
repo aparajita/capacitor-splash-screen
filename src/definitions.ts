@@ -4,28 +4,77 @@ declare module '@capacitor/core' {
   }
 }
 
+export type WSSplashScreenImageContentMode =
+  | 'fill'
+  | 'aspectFill'
+  | 'aspectFit'
+  | 'center'
+  | 'top'
+  | 'bottom'
+  | 'left'
+  | 'right'
+  | 'topLeft'
+  | 'topRight'
+  | 'bottomLeft'
+  | 'bottomRight'
+
 export interface WSSplashScreenShowOptions {
   /**
    * How long to show the splash screen when autoHide is enabled (in ms)
-   * Default is 3000ms.
+   * Default is 3000 ms.
    */
-  showDuration?: number
+  'showDuration'?: number
 
   /**
-   * How long (in ms) to fade in. Default is 200ms.
+   * How long (in ms) to fade in. Default is 200 ms.
    */
-  fadeInDuration?: number
+  'fadeInDuration'?: number
 
   /**
-   * How long (in ms) to fade out. Default is 200ms.
+   * How long (in ms) to fade out. Default is 200 ms.
    */
-  fadeOutDuration?: number
+  'fadeOutDuration'?: number
 
   /**
    * Whether to auto hide the splash after showDuration. Default is false,
    * which means you have to manually call hide() after your app is mounted.
    */
-  autoHide?: boolean
+  'autoHide'?: boolean
+
+  /**
+   * The background color to apply to the splash screen view.
+   * It may be in RGB (6 case-insensitive hex digits) or RGBA
+   * (8 case-insensitive hex digits) format, with or without
+   * a leading '#'.
+   */
+  'backgroundColor'?: string
+
+  /**
+   * Whether to show a spinner centered in the splash screen.
+   */
+  'showSpinner'?: boolean
+
+  /**
+   * On iOS, the spinner size. Anything other than "small" is large.
+   */
+  'ios.spinnerStyle'?: boolean
+
+  /**
+   * On iOS, the mode used to place and scale an image splash screen.
+   * Ignored for storyboard-based splash screens. Valid values are:
+   *
+   * fill - Scale the image to fill, not keeping the aspect ratio.
+   *
+   * aspectFill - Scale the image to fill, keeping the aspect ratio. Portions
+   *   of the image may be offscreen as a result.
+   *
+   * aspectFit - Scale the image, keeping the aspect ratio, such that it
+   *   fills either the width or height of the containing view.
+   *
+   * center/top/bottom/left/right/topLeft/topRight/bottomLeft/bottomRight -
+   *   Place the image in the given location without scaling.
+   */
+  'ios.imageContentMode'?: WSSplashScreenImageContentMode
 }
 
 export interface WSSplashScreenHideOptions {
