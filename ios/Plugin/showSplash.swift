@@ -26,10 +26,9 @@ extension WSSplashScreen {
       guard let view = self.bridge?.viewController.view else {
         return
       }
-      
+
       if let color = options.backgroundColor,
-         let backgroundColor = UIColor(fromHex: color)
-      {
+         let backgroundColor = UIColor(fromHex: color) {
         splashView.backgroundColor = backgroundColor
       }
 
@@ -83,6 +82,7 @@ extension WSSplashScreen {
     )
   }
 
+  // swiftlint:disable cyclomatic_complexity
   func setupImageView(_ view: UIView, _ call: CAPPluginCall?) {
     guard viewInfo.image != nil else {
       return
@@ -154,8 +154,7 @@ extension WSSplashScreen {
     }
 
     if let color = spinnerColor,
-       let uiColor = UIColor(fromHex: color)
-    {
+       let uiColor = UIColor(fromHex: color) {
       spinner.color = uiColor
     }
 

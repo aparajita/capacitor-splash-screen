@@ -39,8 +39,7 @@ class BoundsObserver: NSObject {
    */
   func updateSplashBounds() {
     if let splash = self.splash,
-       let view = splash.splashView
-    {
+       let view = splash.splashView {
       if view is UIImageView {
         // If the splash screen is an image, resize it according to the content mode.
         view.frame = UIScreen.main.bounds

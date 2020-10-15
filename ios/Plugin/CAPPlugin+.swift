@@ -13,16 +13,16 @@ extension CAPPlugin {
 
     guard let config = bridge?.config,
           parts.count > 0,
-          let id = pluginId,
+          let pluginId = self.pluginId,
           let pluginConfig = config.getValue("plugins") as? [String: Any?],
-          var dict = pluginConfig[id] as? [String: Any?]
+          var dict = pluginConfig[pluginId] as? [String: Any?]
     else {
       return nil
     }
 
     // All keys up to the last should be dictionaries
-    for (_, k) in parts[0..<parts.count - 1].enumerated() {
-      if let value = dict[String(k)] as? [String: Any?] {
+    for key in parts[0..<parts.count - 1] {
+      if let value = dict[String(key)] as? [String: Any?] {
         dict = value
       } else {
         return nil
@@ -31,8 +31,7 @@ extension CAPPlugin {
 
     // At this point the last key in parts should be in dict
     if let key = parts.last,
-       let value = dict[String(key)]
-    {
+       let value = dict[String(key)] {
       return value as? T
     }
 

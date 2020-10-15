@@ -64,8 +64,7 @@ extension WSSplashScreen {
   func checkForLaunchScreen() -> Bool {
     if getConfigBool("ios.useLaunchScreen") ?? false,
        let plist = Bundle.main.infoDictionary,
-       let launchStoryboardName = plist["UILaunchStoryboardName"] as? String
-    {
+       let launchStoryboardName = plist["UILaunchStoryboardName"] as? String {
       viewInfo.storyboardName = launchStoryboardName
       return true
     }
