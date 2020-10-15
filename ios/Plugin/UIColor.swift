@@ -32,7 +32,9 @@ extension UIColor {
     var blue: CGFloat = 0.0
     var alpha: CGFloat = 1.0
 
-    guard Scanner(string: hexString).scanHexInt32(&argb) else { return nil }
+    guard Scanner(string: hexString).scanHexInt32(&argb) else {
+      return nil
+    }
 
     if hexString.count == 6 {
       red = CGFloat((argb & 0xFF0000) >> 16) / 255.0

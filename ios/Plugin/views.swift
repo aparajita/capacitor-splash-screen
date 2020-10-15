@@ -31,8 +31,10 @@ extension WSSplashScreen {
 
     if !viewInfo.storyboardName.isEmpty {
       makeStoryboardSplashView()
+
     } else if viewInfo.image != nil {
       makeImageSplashView()
+
     } else {
       warn("No splash image or storyboard specified")
     }
@@ -140,6 +142,7 @@ extension WSSplashScreen {
       } else {
         error("Unable to clone the \"\(viewInfo.storyboardName)\" storyboard view")
       }
+
     } else {
       error("Unable to instantiate the \"\(viewInfo.storyboardName)\" storyboard view controller")
     }
