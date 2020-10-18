@@ -4,12 +4,12 @@ devDependencies:
   '@capacitor/ios': 2.4.2_@capacitor+core@2.4.2
   '@ionic/prettier-config': 1.0.1_prettier@2.1.2
   '@ionic/swiftlint-config': 1.1.2
-  '@rollup/plugin-node-resolve': 9.0.0_rollup@2.29.0
-  nodemon: 2.0.4
+  '@rollup/plugin-node-resolve': 9.0.0_rollup@2.32.0
+  nodemon: 2.0.5
   prettier: 2.1.2
   prettier-plugin-java: 0.8.3
   rimraf: 3.0.2
-  rollup: 2.29.0
+  rollup: 2.32.0
   swiftlint: 1.0.1
   typescript: 4.0.3
 lockfileVersion: 5.1
@@ -42,7 +42,7 @@ packages:
       integrity: sha512-0OpOmsno6yFyN0tOEhE9LkAqQrnTGUxz49+ZdivieI3axFe3CpxbFhcfIsJtr96q9jhkspkYPMqGNZm3gPKjaA==
   /@capacitor/core/2.4.2:
     dependencies:
-      tslib: 1.13.0
+      tslib: 1.14.1
     dev: true
     resolution:
       integrity: sha512-xQyJSZo50+aAvX3ZsX5h2xJDjz1LQxGT0A6/qD1pqJVEUeDhzdfYMbxCPWbmqSONZXddHtwrTiIsjq1Wd+ukuQ==
@@ -68,8 +68,8 @@ packages:
       integrity: sha512-UbE1AIlTowt9uR7fMzRtbQX4URcyuok7mcpdJfFDHAIGM6nDjohYMke+6xOr6ZYlLnEyVmBGNEg0+grEYRgcVg==
   /@ionic/utils-array/2.1.5:
     dependencies:
-      debug: 4.1.1
-      tslib: 2.0.1
+      debug: 4.2.0
+      tslib: 2.0.3
     dev: true
     engines:
       node: '>=10.3.0'
@@ -77,9 +77,9 @@ packages:
       integrity: sha512-HD72a71IQVBmQckDwmA8RxNVMTbxnaLbgFOl+dO5tbvW9CkkSFCv41h6fUuNsSEVgngfkn0i98HDuZC8mk+lTA==
   /@ionic/utils-fs/3.1.5:
     dependencies:
-      debug: 4.1.1
+      debug: 4.2.0
       fs-extra: 9.0.1
-      tslib: 2.0.1
+      tslib: 2.0.3
     dev: true
     engines:
       node: '>=10.3.0'
@@ -87,68 +87,74 @@ packages:
       integrity: sha512-a41bY2dHqWSEQQ/80CpbXSs8McyiCFf2DnIWWLukrhYWf46h4qi6M/8dxcMKrofRiqI/3F+cL3S2mOm9Zz/o2Q==
   /@ionic/utils-object/2.1.5:
     dependencies:
-      debug: 4.1.1
-      tslib: 2.0.1
+      debug: 4.2.0
+      tslib: 2.0.3
     dev: true
     engines:
       node: '>=10.3.0'
     resolution:
       integrity: sha512-XnYNSwfewUqxq+yjER1hxTKggftpNjFLJH0s37jcrNDwbzmbpFTQTVAp4ikNK4rd9DOebX/jbeZb8jfD86IYxw==
-  /@ionic/utils-process/2.1.6:
+  /@ionic/utils-process/2.1.8:
     dependencies:
       '@ionic/utils-object': 2.1.5
-      '@ionic/utils-terminal': 2.2.1
-      debug: 4.1.1
+      '@ionic/utils-terminal': 2.3.1
+      debug: 4.2.0
       signal-exit: 3.0.3
       tree-kill: 1.2.2
-      tslib: 2.0.1
+      tslib: 2.0.3
     dev: true
     engines:
       node: '>=10.3.0'
     resolution:
-      integrity: sha512-HuMTJp6lkzMZAI+FUEqLoOx6wxd29ysmk0Q9dCHABbIEP4hM5zAXTIuv4qUYelzT6lBywS/TAdfz+XB1TM6umg==
+      integrity: sha512-VBBoyTzi+m6tgKAItl+jiTQneGwTOsctcrTG4CsEgmVOVOEhUYkPhddXqzD+oC54hPDU9ROsd3I014P5CWEuhQ==
   /@ionic/utils-stream/3.1.5:
     dependencies:
-      debug: 4.1.1
-      tslib: 2.0.1
+      debug: 4.2.0
+      tslib: 2.0.3
     dev: true
     engines:
       node: '>=10.3.0'
     resolution:
       integrity: sha512-hkm46uHvEC05X/8PHgdJi4l4zv9VQDELZTM+Kz69odtO9zZYfnt8DkfXHJqJ+PxmtiE5mk/ehJWLnn/XAczTUw==
-  /@ionic/utils-subprocess/2.1.6:
+  /@ionic/utils-subprocess/2.1.8:
     dependencies:
       '@ionic/utils-array': 2.1.5
       '@ionic/utils-fs': 3.1.5
-      '@ionic/utils-process': 2.1.6
+      '@ionic/utils-process': 2.1.8
       '@ionic/utils-stream': 3.1.5
-      '@ionic/utils-terminal': 2.2.1
+      '@ionic/utils-terminal': 2.3.1
       cross-spawn: 7.0.3
-      debug: 4.1.1
-      tslib: 2.0.1
+      debug: 4.2.0
+      tslib: 2.0.3
     dev: true
     engines:
       node: '>=10.3.0'
     resolution:
-      integrity: sha512-osM2CaD+bxf4WXfQEjkPXHPqzg4xUqg7Rm9FK/DKddIuL6fHPoeLOwP7t0L3J4417dYsvtssTjxbSQnm/V5aWw==
-  /@ionic/utils-terminal/2.2.1:
+      integrity: sha512-pkmtf1LtXcEMPn6/cctREL2aZtZoy0+0Sl+nT0NIkOHIoBUcqrcfMWdctCSM4Mp6+2/hLWtgpHE3TOIibkWfIg==
+  /@ionic/utils-terminal/2.3.1:
     dependencies:
-      debug: 4.1.1
-      tslib: 2.0.1
+      debug: 4.2.0
+      signal-exit: 3.0.3
+      slice-ansi: 4.0.0
+      string-width: 4.2.0
+      strip-ansi: 6.0.0
+      tslib: 2.0.3
+      untildify: 4.0.0
+      wrap-ansi: 7.0.0
     dev: true
     engines:
       node: '>=10.3.0'
     resolution:
-      integrity: sha512-YBXSpK5rHu3XlQCF01S23Y4Rz1msBRqNBgGDo8lXekeRmI2WgeCxMHFZfKTEh30DQNYibnkwaeLacHp6ohd+8g==
-  /@rollup/plugin-node-resolve/9.0.0_rollup@2.29.0:
+      integrity: sha512-cglsSd2AckI3Ldtdfczeq64vIIDjtPspV5QJtky8f8uIdxkeOIGeRV7bCj1+BEf1hyo+ZuggQxLviHnbMZhiRw==
+  /@rollup/plugin-node-resolve/9.0.0_rollup@2.32.0:
     dependencies:
-      '@rollup/pluginutils': 3.1.0_rollup@2.29.0
+      '@rollup/pluginutils': 3.1.0_rollup@2.32.0
       '@types/resolve': 1.17.1
       builtin-modules: 3.1.0
       deepmerge: 4.2.2
       is-module: 1.0.0
       resolve: 1.17.0
-      rollup: 2.29.0
+      rollup: 2.32.0
     dev: true
     engines:
       node: '>= 10.0.0'
@@ -156,12 +162,12 @@ packages:
       rollup: ^1.20.0||^2.0.0
     resolution:
       integrity: sha512-gPz+utFHLRrd41WMP13Jq5mqqzHL3OXrfj3/MkSyB6UBIcuNt9j60GCbarzMzdf1VHFpOxfQh/ez7wyadLMqkg==
-  /@rollup/pluginutils/3.1.0_rollup@2.29.0:
+  /@rollup/pluginutils/3.1.0_rollup@2.32.0:
     dependencies:
       '@types/estree': 0.0.39
       estree-walker: 1.0.1
       picomatch: 2.2.2
-      rollup: 2.29.0
+      rollup: 2.32.0
     dev: true
     engines:
       node: '>= 8.0.0'
@@ -187,17 +193,17 @@ packages:
     dev: true
     resolution:
       integrity: sha512-EYNwp3bU+98cpU4lAWYYL7Zz+2gryWH1qbdDTidVd6hkiR6weksdbMadyXKXNPEkQFhXM+hVO9ZygomHXp+AIw==
-  /@types/node/14.10.0:
+  /@types/node/14.11.10:
     dev: true
     resolution:
-      integrity: sha512-SOIyrdADB4cq6eY1F+9iU48iIomFAPltu11LCvA9PKcyEwHadjCFzNVPotAR+oEJA0bCP4Xvvgy+vwu1ZjVh8g==
+      integrity: sha512-yV1nWZPlMFpoXyoknm4S56y2nlTAuFYaJuQtYRAOU7xA/FJ9RY0Xm7QOkaYMMmr8ESdHIuUb6oQgR/0+2NqlyA==
   /@types/parse-json/4.0.0:
     dev: true
     resolution:
       integrity: sha512-//oorEZjL6sbPcKUaCdIGlIUeH26mgzimjBB77G6XRgnDl/L5wOnpyBGRe/Mmf5CVW3PwEBE1NjiMZ/ssFh4wA==
   /@types/resolve/1.17.1:
     dependencies:
-      '@types/node': 14.10.0
+      '@types/node': 14.11.10
     dev: true
     resolution:
       integrity: sha512-yy7HuzQhj0dhGpD8RLXSZWEkLsV9ibvxvi6EiJ3bkqLAO1RGo0WbkWQiwpRlSFymTJRz0d3k5LM3kkx8ArDbLw==
@@ -248,6 +254,12 @@ packages:
       node: '>= 8'
     resolution:
       integrity: sha512-mM8522psRCqzV+6LhomX5wgp25YVibjh8Wj23I5RPkPppSVSjyKD2A2mBJmWGa+KN7f2D6LNh9jkBCeyLktzjg==
+  /astral-regex/2.0.0:
+    dev: true
+    engines:
+      node: '>=8'
+    resolution:
+      integrity: sha512-Z7tMw1ytTXt5jqMcOP+OQteU1VuNK9Y02uuJtKQ1Sv69jXQKKg5cibLwGJow8yzZP+eAc18EmLGPal0bp36rvQ==
   /at-least-node/1.0.0:
     dev: true
     engines:
@@ -351,7 +363,7 @@ packages:
     dev: true
     resolution:
       integrity: sha512-BwqQ/AgmKJ8jcMEjaSnfMybnKMgGTrtDKowfTP3pX4jwVy0kNjRsT/AP6h+wC3+3NC+X8X15VWBnTCQlX+wQFg==
-  /chokidar/3.4.2:
+  /chokidar/3.4.3:
     dependencies:
       anymatch: 3.1.1
       braces: 3.0.2
@@ -359,14 +371,14 @@ packages:
       is-binary-path: 2.1.0
       is-glob: 4.0.1
       normalize-path: 3.0.0
-      readdirp: 3.4.0
+      readdirp: 3.5.0
     dev: true
     engines:
       node: '>= 8.10.0'
     optionalDependencies:
       fsevents: 2.1.3
     resolution:
-      integrity: sha512-IZHaDeBeI+sZJRX7lGcXsdzgvZqKv6sECqsbErJA4mHWfpRrD8B97kSFN4cQz6nGBGiuFia1MKR4d6c1o8Cv7A==
+      integrity: sha512-DtM3g7juCXQxFVSNPNByEC2+NImtBuxQQvWlHunpJIS5Ocr0lG306cC7FCi7cEA0fzmybPUIl4txBIobk1gGOQ==
   /ci-info/2.0.0:
     dev: true
     resolution:
@@ -462,12 +474,19 @@ packages:
     dev: true
     resolution:
       integrity: sha512-mel+jf7nrtEl5Pn1Qx46zARXKDpBbvzezse7p7LqINmdoIk8PYP5SySaxEmYv6TZ0JyEKA1hsCId6DIhgITtWQ==
-  /debug/4.1.1:
+  /debug/4.2.0:
     dependencies:
       ms: 2.1.2
     dev: true
+    engines:
+      node: '>=6.0'
+    peerDependencies:
+      supports-color: '*'
+    peerDependenciesMeta:
+      supports-color:
+        optional: true
     resolution:
-      integrity: sha512-pYAIzeRo8J6KPEaJ0VWOh5Pzkbw/RetuzehGM7QRRX5he4fPHx2rdKMB256ehJCkX+XRQm16eZLqLNS8RSZXZw==
+      integrity: sha512-IX2ncY78vDTjZMFUdmsvIRFY2Cf4FnD0wRs+nQwJU8Lu99/tPFdb0VybiiMTPe3I6rQmwsqQqRBvxU+bZ/I8sg==
   /decompress-response/3.3.0:
     dependencies:
       mimic-response: 1.0.1
@@ -886,9 +905,9 @@ packages:
     dev: true
     resolution:
       integrity: sha512-sGkPx+VjMtmA6MX27oA4FBFELFCZZ4S4XqeGOXCv68tT+jb3vk/RyaKWP0PTKyWtmLSM0b+adUTEvbs1PEaH2w==
-  /nodemon/2.0.4:
+  /nodemon/2.0.5:
     dependencies:
-      chokidar: 3.4.2
+      chokidar: 3.4.3
       debug: 3.2.6
       ignore-by-default: 1.0.1
       minimatch: 3.0.4
@@ -904,7 +923,7 @@ packages:
     hasBin: true
     requiresBuild: true
     resolution:
-      integrity: sha512-Ltced+hIfTmaS28Zjv1BM552oQ3dbwPqI4+zI0SLgq+wpJhSyqgYude/aZa/3i31VCQWMfXJVxvu86abcam3uQ==
+      integrity: sha512-6/jqtZvJdk092pVnD2AIH19KQ9GQZAKOZVy/yT1ueL6aoV+Ix7a1lVZStXzvEh0fP4zE41DDWlkVoHjR6WlozA==
   /nopt/1.0.10:
     dependencies:
       abbrev: 1.1.1
@@ -1051,14 +1070,14 @@ packages:
     hasBin: true
     resolution:
       integrity: sha512-y3bGgqKj3QBdxLbLkomlohkvsA8gdAiUQlSBJnBhfn+BPxg4bc62d8TcBW15wavDfgexCgccckhcZvywyQYPOw==
-  /readdirp/3.4.0:
+  /readdirp/3.5.0:
     dependencies:
       picomatch: 2.2.2
     dev: true
     engines:
       node: '>=8.10.0'
     resolution:
-      integrity: sha512-0xe001vZBnJEK+uKcj8qOhyAKPzIT+gStxWr3LCB0DwcXR5NZJ3IaC+yGnHCYzB/S7ov3m3EEbZI2zeNvX+hGQ==
+      integrity: sha512-cMhu7c/8rdhkHXWsY+osBhfSy0JikwpHK/5+imo+LpeasTF8ouErHrlYkwT0++njiyuDvc7OFY5T3ukvZ8qmFQ==
   /regexp-to-ast/0.4.0:
     dev: true
     resolution:
@@ -1104,7 +1123,7 @@ packages:
     hasBin: true
     resolution:
       integrity: sha512-JZkJMZkAGFFPP2YqXZXPbMlMBgsxzE8ILs4lMIX/2o0L9UBw9O/Y3o6wFw/i9YLapcUJWwqbi3kdxIPdC62TIA==
-  /rollup/2.29.0:
+  /rollup/2.32.0:
     dev: true
     engines:
       node: '>=10.0.0'
@@ -1112,7 +1131,7 @@ packages:
     optionalDependencies:
       fsevents: 2.1.3
     resolution:
-      integrity: sha512-gtU0sjxMpsVlpuAf4QXienPmUAhd6Kc7owQ4f5lypoxBW18fw2UNYZ4NssLGsri6WhUZkE/Ts3EMRebN+gNLiQ==
+      integrity: sha512-0FIG1jY88uhCP2yP4CfvtKEqPDRmsUwfY1kEOOM+DH/KOGATgaIFd/is1+fQOxsvh62ELzcFfKonwKWnHhrqmw==
   /semver-diff/3.1.1:
     dependencies:
       semver: 6.3.0
@@ -1149,6 +1168,16 @@ packages:
     dev: true
     resolution:
       integrity: sha512-VUJ49FC8U1OxwZLxIbTTrDvLnf/6TDgxZcK8wxR8zs13xpx7xbG60ndBlhNrFi2EMuFRoeDoJO7wthSLq42EjA==
+  /slice-ansi/4.0.0:
+    dependencies:
+      ansi-styles: 4.3.0
+      astral-regex: 2.0.0
+      is-fullwidth-code-point: 3.0.0
+    dev: true
+    engines:
+      node: '>=10'
+    resolution:
+      integrity: sha512-qMCMfhY040cVHT43K9BFygqYbUPFZKHOg7K73mtTWJRb8pyP3fzf4Ixd5SzdEJQ6MRUg/WBnOLxghZtKKurENQ==
   /string-width/3.1.0:
     dependencies:
       emoji-regex: 7.0.3
@@ -1210,7 +1239,7 @@ packages:
   /swiftlint/1.0.1:
     dependencies:
       '@ionic/utils-fs': 3.1.5
-      '@ionic/utils-subprocess': 2.1.6
+      '@ionic/utils-subprocess': 2.1.8
       cosmiconfig: 6.0.0
     dev: true
     hasBin: true
@@ -1249,14 +1278,14 @@ packages:
     hasBin: true
     resolution:
       integrity: sha512-L0Orpi8qGpRG//Nd+H90vFB+3iHnue1zSSGmNOOCh1GLJ7rUKVwV2HvijphGQS2UmhUZewS9VgvxYIdgr+fG1A==
-  /tslib/1.13.0:
+  /tslib/1.14.1:
     dev: true
     resolution:
-      integrity: sha512-i/6DQjL8Xf3be4K/E6Wgpekn5Qasl1usyw++dAA35Ue5orEn65VIxOA+YvNNl9HV3qv70T7CNwjODHZrLwvd1Q==
-  /tslib/2.0.1:
+      integrity: sha512-Xni35NKzjgMrwevysHTCArtLDpPvye8zV/0E4EyYn43P7/7qvQwPh9BGkHewbMulVntbigmcT7rdX3BNo9wRJg==
+  /tslib/2.0.3:
     dev: true
     resolution:
-      integrity: sha512-SgIkNheinmEBgx1IUNirK0TUD4X9yjjBRTqqjggWCU3pUEqIk3/Uwl3yRixYKT6WjQuGiwDv4NomL3wqRCj+CQ==
+      integrity: sha512-uZtkfKblCEQtZKBF6EBXVZeQNl82yqtDQdv+eck8u7tdPxjLu2/lp5/uPW+um2tpuxINHWy3GhiccY7QgEaVHQ==
   /type-fest/0.8.1:
     dev: true
     engines:
@@ -1296,6 +1325,12 @@ packages:
       node: '>= 10.0.0'
     resolution:
       integrity: sha512-rb6X1W158d7pRQBg5gkR8uPaSfiids68LTJQYOtEUhoJUWBdaQHsuT/EUduxXYxcrt4r5PJ4fuHW1MHT6p0qug==
+  /untildify/4.0.0:
+    dev: true
+    engines:
+      node: '>=8'
+    resolution:
+      integrity: sha512-KK8xQ1mkzZeg9inewmFVDNkg3l5LUhoq9kN6iWYB/CC9YMG8HA+c1Q8HwDe6dEX7kErrEVNVBO3fWsVq5iDgtw==
   /update-notifier/4.1.3:
     dependencies:
       boxen: 4.2.0
@@ -1341,6 +1376,16 @@ packages:
       node: '>=8'
     resolution:
       integrity: sha512-NsmoXalsWVDMGupxZ5R08ka9flZjjiLvHVAWYOKtiKM8ujtZWr9cRffak+uSE48+Ob8ObalXpwyeUiyDD6QFgg==
+  /wrap-ansi/7.0.0:
+    dependencies:
+      ansi-styles: 4.3.0
+      string-width: 4.2.0
+      strip-ansi: 6.0.0
+    dev: true
+    engines:
+      node: '>=10'
+    resolution:
+      integrity: sha512-YVGIj2kamLSTxw6NsZjoBxfSwsn0ycdesmc4p+Q21c5zPuZ1pl+NfxVdxPtdHvmNVOQ6XSYG4AUtyt/Fi7D16Q==
   /wrappy/1.0.2:
     dev: true
     resolution:
@@ -1373,10 +1418,10 @@ specifiers:
   '@ionic/prettier-config': ^1.0.1
   '@ionic/swiftlint-config': ^1.1.2
   '@rollup/plugin-node-resolve': ^9.0.0
-  nodemon: ^2.0.4
+  nodemon: ^2.0.5
   prettier: ^2.1.2
   prettier-plugin-java: ^0.8.3
   rimraf: ^3.0.2
-  rollup: ^2.29.0
+  rollup: ^2.32.0
   swiftlint: ^1.0.1
   typescript: ~4.0.3
