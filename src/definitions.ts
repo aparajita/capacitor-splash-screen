@@ -20,26 +20,35 @@ export type WSSplashScreenImageContentMode =
 
 export interface WSSplashScreenShowOptions {
   /**
-   * How long to show the splash screen when autoHide is enabled (in ms)
+   * How long to show the splash screen (in ms) when autoHide is enabled.
    * Default is 3000 ms.
    */
-  'showDuration'?: number
+  showDuration?: number
 
   /**
    * How long (in ms) to fade in. Default is 200 ms.
+   *
+   * NOTE: This does NOT come into play on iOS during launch.
    */
-  'fadeInDuration'?: number
+  fadeInDuration?: number
 
   /**
    * How long (in ms) to fade out. Default is 200 ms.
    */
-  'fadeOutDuration'?: number
+  fadeOutDuration?: number
 
   /**
-   * Whether to auto hide the splash after showDuration. Default is false,
-   * which means you have to manually call hide() after your app is mounted.
+   * Whether to auto hide the splash after showDuration. Default is true.
+   * If false, you have to manually call hide() after your app is mounted.
    */
-  'autoHide'?: boolean
+  autoHide?: boolean
+
+  /**
+   * Whether to let your own native code animate the splash view after
+   * it is shown during launch or by calling show(). When this is true,
+   * showDuration, fadeOutDuration and autoHide are ignored.
+   */
+  animate?: boolean
 
   /**
    * The background color to apply to the splash screen view.
@@ -47,17 +56,22 @@ export interface WSSplashScreenShowOptions {
    * (8 case-insensitive hex digits) format, with or without
    * a leading '#'.
    */
-  'backgroundColor'?: string
+  backgroundColor?: string
 
   /**
    * Whether to show a spinner centered in the splash screen.
    */
-  'showSpinner'?: boolean
+  showSpinner?: boolean
 
   /**
-   * On iOS, the spinner size. Anything other than "small" is large.
+   * Spinner color. Color format is same as for backgroundColor.
    */
-  'ios.spinnerStyle'?: boolean
+  spinnerColor?: string
+
+  /**
+   * On iOS, the spinner size.
+   */
+  iosSpinnerStyle?: 'small' | 'large'
 
   /**
    * On iOS, the mode used to place and scale an image splash screen.
@@ -74,76 +88,43 @@ export interface WSSplashScreenShowOptions {
    * center/top/bottom/left/right/topLeft/topRight/bottomLeft/bottomRight -
    *   Place the image in the given location without scaling.
    */
-  'ios.imageContentMode'?: WSSplashScreenImageContentMode
+  iosImageContentMode?: WSSplashScreenImageContentMode
 }
 
 export interface WSSplashScreenHideOptions {
+  /**
+   * How long (in ms) to delay before hiding. Default is 0.
+   */
+  delay?: number
+
   /**
    * How long (in ms) to fade out. Default is 200ms.
    */
   fadeOutDuration?: number
 }
 
-export interface WSSplashScreenIosOptions {
-  /**
-   * The size of the spinner.
-   */
-  spinnerSize?: 'small' | 'large'
-
-  /**
-   * Whether the iOS launch screen storyboard should be used as
-   * the splash screen. Default is false.
-   */
-  useLaunchScreen?: boolean
-
-  /**
-   * The name of a custom storyboard to use as the splash screen.
-   * This is only used if iosUseLaunchScreen is true. If this is specified,
-   * the named storyboard must exist or the app will crash.
-   */
-  storyboard?: string
-
-  /**
-   * The name of an image resource to use as the splash screen. This will
-   * only be used if iosUseLaunchScreen is false and iosStoryboard is empty.
-   */
-  image?: string
-}
-
-/**
- * Global options defined in capacitor.config.json.plugins.WSSplashScreen
- */
-export interface WSSplashScreenOptions {
-  /**
-   * The background color of the splash screen. Should be either 6 or 8
-   * hex digits with an optional leading "#". If 6 digits, it's RGB.
-   * If 8 digits, it's RGBA.
-   */
-  backgroundColor?: string
-
-  /**
-   * Whether to show a spinner centered in the splash screen. Default is false.
-   */
-  showSpinner?: boolean
-
-  /**
-   * The color of the spinner. Should be either 6 or 8
-   * hex digits with an optional leading "#". If 6 digits, it's RGB.
-   * If 8 digits, it's RGBA.
-   */
-  spinnerColor?: string
-
-  ios?: WSSplashScreenIosOptions
+export enum WSSplashScreenErrorType {
+  noSplashScreen,
+  animateMethodNotFound
 }
 
 export interface WSSplashScreenPlugin {
   /**
    * Show the splash screen
    */
-  show(options?: WSSplashScreenShowOptions, callback?: Function): Promise<void>
+  show(options?: WSSplashScreenShowOptions): Promise<void>
 
   /**
    * Hide the splash screen
    */
-  hide(options?: WSSplashScreenHideOptions, callback?: Function): Promise<void>
+  hide(options?: WSSplashScreenHideOptions): Promise<void>
+
+  /**
+   * Animate the splash screen. This is typically called when your app
+   * is mounted. Note this will do nothing unless the animate option is true.
+   *
+   * @throws {Error} If animateSplashScreen() is not defined in your native
+   *   application code.
+   */
+  animate(): Promise<void>
 }

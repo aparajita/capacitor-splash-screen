@@ -9,7 +9,7 @@ extension WSSplashScreen {
   /*
    * Build the views used to display the splash screen.
    */
-  func buildViews() {
+  func makeSplashView() {
     // First support the legacy behavior, an image called "Splash"
     var found = checkForSplashImage()
 
@@ -44,7 +44,7 @@ extension WSSplashScreen {
     }
 
     // Observe for changes on frame and bounds to handle rotation resizing
-    _ = BoundsObserver(self)
+    _ = BoundsObserver(forSplash: self)
   }
 
   /*
@@ -64,7 +64,7 @@ extension WSSplashScreen {
    * If the ios.useLaunchScreen plugin option is true, try to get the app's launch storyboard name.
    */
   func checkForLaunchScreen() -> Bool {
-    if getConfigBool("ios.useLaunchScreen") ?? false,
+    if let _ = getConfigBool(withKeyPath: "iosUseLaunchScreen", defaultValue: false),
        let plist = Bundle.main.infoDictionary,
        let launchStoryboardName = plist["UILaunchStoryboardName"] as? String {
       viewInfo.storyboardName = launchStoryboardName
@@ -78,7 +78,7 @@ extension WSSplashScreen {
    * Check for a non-empty ios.storyboard plugin option.
    */
   func checkForCustomStoryboard() -> Bool {
-    if let name = getConfigString("ios.storyboard") {
+    if let name = getConfigString(withKeyPath: "iosStoryboard") {
       viewInfo.storyboardName = name
       return true
     }
@@ -91,7 +91,7 @@ extension WSSplashScreen {
    * attempt to create the named image.
    */
   func checkForCustomImage() -> Bool {
-    if let name = getConfigString("image") {
+    if let name = getConfigString(withKeyPath: "image") {
       if let image = UIImage(named: name) {
         viewInfo.imageName = name
         viewInfo.image = image
@@ -102,24 +102,6 @@ extension WSSplashScreen {
     }
 
     return false
-  }
-
-  /*
-   * If the showSpinner plugin option is true, create a spinner.
-   */
-  func checkForSpinner() {
-    let showSpinner = getConfigBool("showSpinner") ?? false
-
-    if showSpinner {
-      spinner = UIActivityIndicatorView()
-
-      guard let spin = spinner else {
-        return
-      }
-
-      spin.translatesAutoresizingMaskIntoConstraints = false
-      spin.startAnimating()
-    }
   }
 
   /*

@@ -13,11 +13,15 @@ export class WSSplashScreenWeb extends WebPlugin implements WSSplashScreenPlugin
     })
   }
 
-  show(_options?: WSSplashScreenShowOptions, _callback?: Function): Promise<void> {
+  show(_options?: WSSplashScreenShowOptions): Promise<void> {
     return Promise.resolve()
   }
 
-  hide(_options?: WSSplashScreenHideOptions, _callback?: Function): Promise<void> {
+  hide(_options?: WSSplashScreenHideOptions): Promise<void> {
+    return Promise.resolve()
+  }
+
+  animate(): Promise<void> {
     return Promise.resolve()
   }
 }

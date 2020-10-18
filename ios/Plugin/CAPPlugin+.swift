@@ -7,12 +7,12 @@
 
 import Capacitor
 
-extension CAPPlugin {
-  public func getConfigValue<T>(_ keyPath: String, _ ofType: T.Type) -> T? {
-    let parts = keyPath.split(separator: ".")
+fileprivate let kIosConfigPrefix = "ios"
+fileprivate let kAndroidConfigPrefix = "android"
 
+extension CAPPlugin {
+  public func getConfigValue<T>(withKeyPath keyPath: String, ofType: T.Type, defaultValue: T? = nil) -> T? {
     guard let config = bridge?.config,
-          parts.count > 0,
           let pluginId = self.pluginId,
           let pluginConfig = config.getValue("plugins") as? [String: Any?],
           var dict = pluginConfig[pluginId] as? [String: Any?]
@@ -20,8 +20,26 @@ extension CAPPlugin {
       return nil
     }
 
+    var modifiedKeyPath = keyPath
+
+    // If the keyPath begins with "ios" or "android", first try it as is
+    if keyPath.hasPrefix(kIosConfigPrefix) || keyPath.hasPrefix(kAndroidConfigPrefix) {
+      if let value = dict[keyPath] {
+        return value as? T ?? defaultValue
+      }
+
+      // If it doesn't exist as is, split it into prefix.suffix
+      let configPrefix = keyPath.hasPrefix(kIosConfigPrefix) ? kIosConfigPrefix : kAndroidConfigPrefix
+      let prefix = keyPath.prefix(configPrefix.count)
+      var suffix = keyPath.dropFirst(prefix.count)
+      suffix = suffix.prefix(1).lowercased() + suffix.dropFirst(1)
+      modifiedKeyPath = prefix + "." + suffix
+    }
+
+    let keys = modifiedKeyPath.split(separator: ".")
+
     // All keys up to the last should be dictionaries
-    for key in parts[0..<parts.count - 1] {
+    for key in keys[0..<keys.count - 1] {
       if let value = dict[String(key)] as? [String: Any?] {
         dict = value
       } else {
@@ -29,48 +47,56 @@ extension CAPPlugin {
       }
     }
 
-    // At this point the last key in parts should be in dict
-    if let key = parts.last,
+    // At this point the last key in keys should be in dict
+    if let key = keys.last,
        let value = dict[String(key)] {
-      return value as? T
+      return value as? T ?? defaultValue
     }
 
     return nil
   }
 
-  public func getConfigString(_ keyPath: String) -> String? {
-    return getConfigValue(keyPath, String.self)
+  public func getConfigString(withKeyPath keyPath: String, defaultValue: String? = nil) -> String? {
+    return getConfigValue(withKeyPath: keyPath, ofType: String.self, defaultValue: defaultValue)
   }
 
-  public func getConfigInt(_ keyPath: String) -> Int? {
-    return getConfigValue(keyPath, Int.self)
+  public func getConfigInt(withKeyPath keyPath: String, defaultValue: Int? = nil) -> Int? {
+    return getConfigValue(withKeyPath: keyPath, ofType: Int.self, defaultValue: defaultValue)
   }
 
-  public func getConfigDouble(_ keyPath: String) -> Double? {
-    return getConfigValue(keyPath, Double.self)
+  public func getConfigDouble(withKeyPath keyPath: String, defaultValue: Double? = nil) -> Double? {
+    return getConfigValue(withKeyPath: keyPath, ofType: Double.self, defaultValue: defaultValue)
   }
 
-  public func getConfigBool(_ keyPath: String) -> Bool? {
-    return getConfigValue(keyPath, Bool.self)
+  public func getConfigBool(withKeyPath keyPath: String, defaultValue: Bool? = nil) -> Bool? {
+    return getConfigValue(withKeyPath: keyPath, ofType: Bool.self, defaultValue: defaultValue)
   }
 
-  public func getConfigValue<T>(_ key: String, _ call: CAPPluginCall?, _ ofType: T.Type) -> T? {
-    return call?.get(key, T.self) ?? getConfigValue(key, T.self)
+  public func getConfigValue<T>(
+    withKeyPath key: String,
+    pluginCall call: CAPPluginCall?,
+    ofType: T.Type,
+    defaultValue: T? = nil) -> T? {
+    if let result = call?.get(key, T.self, defaultValue) {
+      return result
+    }
+
+    return getConfigValue(withKeyPath: key, ofType: T.self, defaultValue: defaultValue)
   }
 
-  public func getConfigString(_ keyPath: String, _ call: CAPPluginCall?) -> String? {
-    return getConfigValue(keyPath, call, String.self)
+  public func getConfigString(withKeyPath keyPath: String, pluginCall call: CAPPluginCall?, defaultValue: String? = nil) -> String? {
+    return getConfigValue(withKeyPath: keyPath, pluginCall: call, ofType: String.self, defaultValue: defaultValue)
   }
 
-  public func getConfigInt(_ keyPath: String, _ call: CAPPluginCall?) -> Int? {
-    return getConfigValue(keyPath, call, Int.self)
+  public func getConfigInt(withKeyPath keyPath: String, pluginCall call: CAPPluginCall?, defaultValue: Int? = nil) -> Int? {
+    return getConfigValue(withKeyPath: keyPath, pluginCall: call, ofType: Int.self, defaultValue: defaultValue)
   }
 
-  public func getConfigDouble(_ keyPath: String, _ call: CAPPluginCall?) -> Double? {
-    return getConfigValue(keyPath, call, Double.self)
+  public func getConfigDouble(withKeyPath keyPath: String, pluginCall call: CAPPluginCall?, defaultValue: Double? = nil) -> Double? {
+    return getConfigValue(withKeyPath: keyPath, pluginCall: call, ofType: Double.self, defaultValue: defaultValue)
   }
 
-  public func getConfigBool(_ keyPath: String, _ call: CAPPluginCall?) -> Bool? {
-    return getConfigValue(keyPath, call, Bool.self)
+  public func getConfigBool(withKeyPath keyPath: String, pluginCall call: CAPPluginCall?, defaultValue: Bool? = nil) -> Bool? {
+    return getConfigValue(withKeyPath: keyPath, pluginCall: call, ofType: Bool.self, defaultValue: defaultValue)
   }
 }

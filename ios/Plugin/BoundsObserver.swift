@@ -12,7 +12,7 @@ class BoundsObserver: NSObject {
   @objc var viewToObserve: UIView?
   var splash: WSSplashScreen?
 
-  init(_ splash: WSSplashScreen) {
+  init(forSplash splash: WSSplashScreen) {
     super.init()
     self.splash = splash
     updateSplashBounds()
