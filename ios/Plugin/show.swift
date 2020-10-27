@@ -8,16 +8,36 @@
 import Capacitor
 
 extension WSSplashScreen {
+  static let contentModeMap: [String: UIView.ContentMode] = [
+    "fill": .scaleToFill,
+    "aspectFill": .scaleAspectFill,
+    "fit": .scaleAspectFit,
+    "center": .center,
+    "top": .top,
+    "bottom": .bottom,
+    "left": .left,
+    "right": .right,
+    "topLeft": .topLeft,
+    "topRight": .topRight,
+    "bottomLeft": .bottomLeft,
+    "bottomRight": .bottomRight
+  ]
+
   func showOnLaunch() {
     let options = ShowOptions(withPlugin: self, pluginCall: nil, isLaunchSplash: true)
     debug("show at launch:", options)
-    showSplash(withOptions: options, pluginCall: nil, completion: {})
+    showSplash(withOptions: options, pluginCall: nil)
   }
 
-  func showSplash(withOptions options: ShowOptions, pluginCall call: CAPPluginCall?, completion: @escaping () -> Void) {
-    // If there's no view in which to place the splash screen, bail
+  func showSplash(withOptions options: ShowOptions, pluginCall call: CAPPluginCall?) {
+    // If we haven't yet built the views, do it now
+    if self.splashView == nil {
+      buildViews(forPluginCall: call)
+    }
+
+    // Unwrap splashView, make sure we have one
     guard let splashView = self.splashView else {
-      return
+      return self.noSplashAvailable(forCall: call)
     }
 
     showDuration = options.showDuration
@@ -27,6 +47,9 @@ extension WSSplashScreen {
       guard let view = self.bridge?.viewController.view else {
         return
       }
+
+      // Remove any existing color
+      splashView.backgroundColor = nil
 
       if let color = options.backgroundColor {
         if let backgroundColor = self.makeUIColor(fromHex: color) {
@@ -56,29 +79,29 @@ extension WSSplashScreen {
       // If there is a spinner, add it on top of the splash
       self.setupSpinner(inView: view, pluginCall: call)
 
-      self.animateSplash(view, withOptions: options, pluginCall: call, completion: completion)
+      self.fadeSplashIn(view, withOptions: options, pluginCall: call)
     }
   }
 
-  func animateSplash(_ view: UIView, withOptions options: ShowOptions, pluginCall call: CAPPluginCall?, completion: @escaping () -> Void) {
+  func fadeSplashIn(_ view: UIView, withOptions options: ShowOptions, pluginCall call: CAPPluginCall?) {
     // swiftlint doesn't like nested trailing closures, so we define this separately
     let onAnimationEnd: (Bool) -> Void = { _ in
       self.isVisible = true
 
-      if options.isLaunchSplash && options.autoHide {
+      if options.autoHide {
         DispatchQueue.main.asyncAfter(
-          deadline: DispatchTime.now() + (Double(options.showDuration) / 1000)
+          deadline: DispatchTime.now() + options.showDuration
         ) {
           let hideOptions = HideOptions(plugin: self, call: call)
-          self.hideSplash(withOptions: hideOptions, pluginCall: call, completion: completion)
+          self.hideSplash(withOptions: hideOptions, pluginCall: call)
         }
       } else {
-        completion()
+        call?.success()
       }
     }
 
     UIView.animate(
-      withDuration: Double(options.fadeInDuration) / 1000,
+      withDuration: options.fadeInDuration,
       delay: 0,
       options: [.overrideInheritedOptions, .showHideTransitionViews, .curveLinear],
       animations: {
@@ -89,7 +112,6 @@ extension WSSplashScreen {
     )
   }
 
-  // swiftlint:disable cyclomatic_complexity
   func setupImageView(_ view: UIView, pluginCall call: CAPPluginCall?) {
     guard viewInfo.image != nil else {
       return
@@ -97,47 +119,9 @@ extension WSSplashScreen {
 
     var contentMode: UIView.ContentMode = .scaleAspectFill
 
-    if let mode = getConfigString(withKeyPath: "iosImageContentMode", pluginCall: call) {
-      switch mode {
-      case "fill":
-        contentMode = .scaleToFill
-
-      case "aspectFill":
-        contentMode = .scaleAspectFill
-
-      case "aspectFit":
-        contentMode = .scaleAspectFit
-
-      case "center":
-        contentMode = .center
-
-      case "top":
-        contentMode = .top
-
-      case "bottom":
-        contentMode = .bottom
-
-      case "left":
-        contentMode = .left
-
-      case "right":
-        contentMode = .right
-
-      case "topLeft":
-        contentMode = .topLeft
-
-      case "topRight":
-        contentMode = .topRight
-
-      case "bottomLeft":
-        contentMode = .bottomLeft
-
-      case "bottomRight":
-        contentMode = .bottomRight
-
-      default:
-        contentMode = .scaleAspectFill
-      }
+    if let configMode = getConfigString(withKeyPath: "iosImageDisplayMode", pluginCall: call),
+       let mode = WSSplashScreen.contentModeMap[configMode] {
+      contentMode = mode
     }
 
     view.contentMode = contentMode

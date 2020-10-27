@@ -1,13 +1,13 @@
 declare module '@capacitor/core' {
   interface PluginRegistry {
-    WSSplashScreen: WSSplashScreenPlugin
+    WSSplashScreen: WSSplashScreenPlugin;
   }
 }
 
-export type WSSplashScreenImageContentMode =
+export type WSSplashScreenIosImageDisplayMode =
   | 'fill'
   | 'aspectFill'
-  | 'aspectFit'
+  | 'fit'
   | 'center'
   | 'top'
   | 'bottom'
@@ -16,39 +16,78 @@ export type WSSplashScreenImageContentMode =
   | 'topLeft'
   | 'topRight'
   | 'bottomLeft'
-  | 'bottomRight'
+  | 'bottomRight';
+
+export type WSSplashScreenAndroidImageDisplayMode =
+  | 'fill'
+  | 'aspectFill'
+  | 'fit'
+  | 'fitTop'
+  | 'fitBottom'
+  | 'center';
+
+export type WSSplashScreenIosSpinnerStyle = 'small' | 'large';
+
+export type WSSplashScreenAndroidSpinnerStyle =
+  | 'small'
+  | 'large'
+  | 'horizontal'
+  | 'smallInverse'
+  | 'inverse'
+  | 'largeInverse';
+
+/**
+ * In options objects, when you specify a duration, it can either
+ * be in seconds or milliseconds. Any value >= 20 will be considered
+ * milliseconds, any value < 20 will be considered seconds.
+ */
+export type WSSplashScreenDuration = number;
 
 export interface WSSplashScreenShowOptions {
   /**
-   * How long to show the splash screen (in ms) when autoHide is enabled.
-   * Default is 3000 ms.
+   * The name of an image or storyboard (iOS) / screen (Android) resource.
+   * On iOS, the default is "Splash", on Android "splash". If the name is
+   * "*", on iOS the configured LaunchScreen storyboard will be used,
+   * and on Android the layout "launch_screen" will be used if present.
    */
-  showDuration?: number
+  resource?: string;
 
   /**
-   * How long (in ms) to fade in. Default is 200 ms.
+   * How long to delay before showing the splash screen.
+   * Default is 0.
+   */
+  delay?: WSSplashScreenDuration;
+
+  /**
+   * How long to show the splash screen before fading out
+   * when autoHide is enabled. Default is 3 seconds.
+   */
+  showDuration?: WSSplashScreenDuration;
+
+  /**
+   * How long to fade in. Default is 200 ms.
    *
-   * NOTE: This does NOT come into play on iOS during launch.
+   * NOTE: This does NOT come into play during launch on iOS.
    */
-  fadeInDuration?: number
+  fadeInDuration?: WSSplashScreenDuration;
 
   /**
-   * How long (in ms) to fade out. Default is 200 ms.
+   * How long to fade out. Default is 200 ms.
    */
-  fadeOutDuration?: number
+  fadeOutDuration?: WSSplashScreenDuration;
 
   /**
-   * Whether to auto hide the splash after showDuration. Default is true.
+   * Whether to auto hide the splash after showDuration. Default is false.
    * If false, you have to manually call hide() after your app is mounted.
    */
-  autoHide?: boolean
+  autoHide?: boolean;
 
   /**
    * Whether to let your own native code animate the splash view after
    * it is shown during launch or by calling show(). When this is true,
-   * showDuration, fadeOutDuration and autoHide are ignored.
+   * showDuration, fadeOutDuration and autoHide are ignored. Default is false.
    */
-  animate?: boolean
+  animated?: boolean;
 
   /**
    * The background color to apply to the splash screen view.
@@ -56,25 +95,30 @@ export interface WSSplashScreenShowOptions {
    * (8 case-insensitive hex digits) format, with or without
    * a leading '#'.
    */
-  backgroundColor?: string
+  backgroundColor?: string;
 
   /**
-   * Whether to show a spinner centered in the splash screen.
+   * Whether to show a spinner centered in the splash screen. Default is false.
    */
-  showSpinner?: boolean
+  showSpinner?: boolean;
 
   /**
    * Spinner color. Color format is same as for backgroundColor.
    */
-  spinnerColor?: string
+  spinnerColor?: string;
 
   /**
-   * On iOS, the spinner size.
+   * The spinner size on iOS.
    */
-  iosSpinnerStyle?: 'small' | 'large'
+  iosSpinnerStyle?: WSSplashScreenIosSpinnerStyle;
 
   /**
-   * On iOS, the mode used to place and scale an image splash screen.
+   * The spinner size/style on Android.
+   */
+  androidSpinnerStyle?: WSSplashScreenAndroidSpinnerStyle;
+
+  /**
+   * The mode used to place and scale an image splash screen.
    * Ignored for storyboard-based splash screens. Valid values are:
    *
    * fill - Scale the image to fill, not keeping the aspect ratio.
@@ -82,42 +126,83 @@ export interface WSSplashScreenShowOptions {
    * aspectFill - Scale the image to fill, keeping the aspect ratio. Portions
    *   of the image may be offscreen as a result.
    *
-   * aspectFit - Scale the image, keeping the aspect ratio, such that it
+   * fit - Scale and center the image, keeping the aspect ratio, such that it
    *   fills either the width or height of the containing view.
    *
    * center/top/bottom/left/right/topLeft/topRight/bottomLeft/bottomRight -
    *   Place the image in the given location without scaling.
    */
-  iosImageContentMode?: WSSplashScreenImageContentMode
+  iosImageDisplayMode?: WSSplashScreenIosImageDisplayMode;
+
+  /**
+   * The mode used to place and scale an image splash screen.
+   * Ignored for layout-based splash screens. Valid values are:
+   *
+   * fill - Scale the image to fill, not keeping the aspect ratio.
+   *
+   * aspectFill - Scale the image to fill, keeping the aspect ratio.
+   *   Portions of the image may be offscreen as a result.
+   *
+   * fit - Scale and center the image, keeping the aspect ratio, such that it
+   *   fills either the width or height of the containing view.
+   *
+   * fitTop/fitBottom - (Android only) Same as fit, but place the image
+   *   at the top or bottom of the screen.
+   */
+  androidImageDisplayMode?: WSSplashScreenAndroidImageDisplayMode;
+
+  /**
+   * If true, the splash will cover the status bar on Android.
+   */
+  androidFullscreen?: boolean;
 }
 
 export interface WSSplashScreenHideOptions {
   /**
-   * How long (in ms) to delay before hiding. Default is 0.
+   * How long to delay before hiding. Default is 0.
    */
-  delay?: number
+  delay?: WSSplashScreenDuration;
 
   /**
-   * How long (in ms) to fade out. Default is 200ms.
+   * How long to fade out. Default is 200 ms.
    */
-  fadeOutDuration?: number
+  fadeOutDuration?: WSSplashScreenDuration;
+}
+
+export interface WSSplashScreenAnimateOptions {
+  /**
+   * Arbitrary options may be passed to your animation code
+   */
+  [key: string]: any;
+}
+
+export interface WSSplashScreenAppStateOptions {
+  /**
+   * The code to call on app suspend
+   */
+  onSuspend?: () => void;
+
+  /**
+   * The code to call on opp resume
+   */
+  onResume?: () => void;
 }
 
 export enum WSSplashScreenErrorType {
   noSplashScreen,
-  animateMethodNotFound
+  animateMethodNotFound,
 }
 
 export interface WSSplashScreenPlugin {
   /**
    * Show the splash screen
    */
-  show(options?: WSSplashScreenShowOptions): Promise<void>
+  show(options?: WSSplashScreenShowOptions): Promise<void>;
 
   /**
    * Hide the splash screen
    */
-  hide(options?: WSSplashScreenHideOptions): Promise<void>
+  hide(options?: WSSplashScreenHideOptions): Promise<void>;
 
   /**
    * Animate the splash screen. This is typically called when your app
@@ -126,5 +211,5 @@ export interface WSSplashScreenPlugin {
    * @throws {Error} If animateSplashScreen() is not defined in your native
    *   application code.
    */
-  animate(): Promise<void>
+  animate(): Promise<void>;
 }

@@ -16,63 +16,83 @@ import Capacitor
  *    thus filling the gap in time.
  */
 
-fileprivate let kDefaultFadeInDuration = 200
-fileprivate let kDefaultFadeOutDuration = 200
-fileprivate let kDefaultShowDuration = 3000
-fileprivate let kDefaultAutoHide = true
+private let kDefaultFadeInDuration = 0.2
+private let kDefaultFadeOutDuration = 0.2
+private let kDefaultShowDuration = 3.0
+private let kDefaultAutoHide = true
 
 @objc(WSSplashScreen)
 public class WSSplashScreen: CAPPlugin {
   enum ErrorType: String {
-    case noSplash = "noSplash"
-    case animateMethodNotFound = "animateMethodNotFound"
+    case noSplash
+    case animateMethodNotFound
   }
 
   struct ShowOptions {
-    var showDuration: Int
-    var fadeInDuration: Int
-    var fadeOutDuration: Int
+    var showDuration: Double
+    var fadeInDuration: Double
+    var fadeOutDuration: Double
     var autoHide: Bool
     var backgroundColor: String?
-    var animate: Bool
+    var animated: Bool
     var showSpinner: Bool
     var isLaunchSplash: Bool
 
     init(withPlugin plugin: WSSplashScreen, pluginCall call: CAPPluginCall?, isLaunchSplash: Bool) {
-      showDuration = plugin.getConfigInt(withKeyPath: "showDuration", pluginCall: call) ?? kDefaultShowDuration
-      fadeInDuration = plugin.getConfigInt(withKeyPath: "fadeInDuration", pluginCall: call) ?? kDefaultFadeInDuration
-      fadeOutDuration = plugin.getConfigInt(withKeyPath: "fadeOutDuration", pluginCall: call) ?? kDefaultFadeOutDuration
+      showDuration = WSSplashScreen.toSeconds(
+        plugin.getConfigDouble(withKeyPath: "showDuration", pluginCall: call) ?? kDefaultShowDuration)
+      fadeInDuration = WSSplashScreen.toSeconds(
+        plugin.getConfigDouble(withKeyPath: "fadeInDuration", pluginCall: call) ?? kDefaultFadeInDuration)
+      fadeOutDuration = WSSplashScreen.toSeconds(
+        plugin.getConfigDouble(withKeyPath: "fadeOutDuration", pluginCall: call) ?? kDefaultFadeOutDuration)
       backgroundColor = plugin.getConfigString(withKeyPath: "backgroundColor", pluginCall: call)
-      autoHide = plugin.getConfigBool(withKeyPath: "autoHide", pluginCall: call) ?? kDefaultAutoHide
-      animate = plugin.getConfigBool(withKeyPath: "animate", pluginCall: call) ?? false
+      animated = plugin.getConfigBool(withKeyPath: "animated", pluginCall: call) ?? false
+
+      // If the splash is marked as animated, it's up to the dev to hide the splash
+      if animated {
+        autoHide = false
+      } else {
+        autoHide = plugin.getConfigBool(withKeyPath: "autoHide", pluginCall: call) ?? kDefaultAutoHide
+      }
+      
       showSpinner = plugin.getConfigBool(withKeyPath: "showSpinner", pluginCall: call) ?? false
       self.isLaunchSplash = isLaunchSplash
     }
   }
 
   struct HideOptions {
-    var delay: Int
-    var fadeOutDuration: Int
+    var delay: Double
+    var fadeOutDuration: Double
 
     init(plugin: WSSplashScreen, call: CAPPluginCall?) {
-      delay = plugin.getConfigInt(withKeyPath: "delay", pluginCall: call) ?? 0
-      fadeOutDuration = plugin.getConfigInt(withKeyPath: "fadeOutDuration", pluginCall: call) ?? kDefaultFadeOutDuration
+      delay = WSSplashScreen.toSeconds(plugin.getConfigDouble(withKeyPath: "delay", pluginCall: call) ?? 0)
+      fadeOutDuration = WSSplashScreen.toSeconds(
+        plugin.getConfigDouble(withKeyPath: "fadeOutDuration", pluginCall: call) ?? kDefaultFadeOutDuration)
     }
   }
 
   struct ViewInfo {
-    var imageName = ""
+    var resourceName = ""
     var image: UIImage?
-    var storyboardName = ""
+    var storyboard: UIStoryboard?
   }
 
   var viewInfo = ViewInfo()
   var splashView: UIView?
-  var showDuration: Int = 0
+  var showDuration: Double = 0
   var spinner: UIActivityIndicatorView?
   var imageContentMode: UIView.ContentMode = .scaleAspectFill
   var isVisible: Bool = false
   var logLevel = LogLevel.info
+
+  /*
+   * iOS animation methods usually want seconds for durations.
+   * Convert milliseconds to seconds if necessary.
+   */
+  static private func toSeconds(_ value: Double) -> Double {
+    // We consider any values >= 20 to be milliseconds
+    return value >= 20 ? value / 1000 : value
+  }
 
   /*
    * Called when the plugin is loaded. Note the web view is not initialized yet,
@@ -80,13 +100,12 @@ public class WSSplashScreen: CAPPlugin {
    * appropriate splash view in the bridge view controller.
    */
   override public func load() {
-    showDuration = getConfigInt(withKeyPath: "showDuration") ?? kDefaultShowDuration
+    showDuration = getConfigDouble(withKeyPath: "showDuration") ?? kDefaultShowDuration
 
     if showDuration == 0 {
       info("showDuration = 0, splash screen disabled")
     } else {
       setLogLevel()
-      makeSplashView()
       showOnLaunch()
     }
   }
@@ -95,13 +114,9 @@ public class WSSplashScreen: CAPPlugin {
    * show() plugin call. Shows the splashscreen.
    */
   @objc public func show(_ call: CAPPluginCall) {
-    guard splashView != nil else {
-      return noSplashAvailable(forCall: call)
-    }
-
     let options = ShowOptions(withPlugin: self, pluginCall: call, isLaunchSplash: false)
     debug("show():", options)
-    showSplash(withOptions: options, pluginCall: call, completion: { call.success() })
+    showSplash(withOptions: options, pluginCall: call)
   }
 
   /*
@@ -114,7 +129,7 @@ public class WSSplashScreen: CAPPlugin {
 
     let options = HideOptions(plugin: self, call: call)
     debug("hide():", options)
-    hideSplash(withOptions: options, pluginCall: call, completion: { call.success() })
+    hideSplash(withOptions: options, pluginCall: call)
   }
 
   /*
@@ -125,27 +140,17 @@ public class WSSplashScreen: CAPPlugin {
       return noSplashAvailable(forCall: call)
     }
 
-    guard let _ = getConfigBool(withKeyPath: "animate") else {
+    guard let animated = getConfigBool(withKeyPath: "animated"),
+          animated else {
       return
     }
 
-    DispatchQueue.main.async {
-      let selector = Selector(("animateSplashScreen:"))
-
-      if let delegate = UIApplication.shared.delegate, delegate.responds(to: selector) {
-        delegate.perform(selector, with: [
-          "plugin": self,
-          "call": call,
-          "splashView": self.splashView,
-          "spinner": self.spinner
-        ])
-      } else {
-        call.reject("The method animateSplashScreen(_: Any) is not defined in the AppDelegate class", ErrorType.animateMethodNotFound.rawValue)
-      }
-    }
+    animate(withCall: call)
   }
 
-  private func noSplashAvailable(forCall call: CAPPluginCall) {
-    call.reject("No splash screen view is available", ErrorType.noSplash.rawValue)
+  public func noSplashAvailable(forCall call: CAPPluginCall?) {
+    if let call = call {
+      call.reject("No splash screen view is available", ErrorType.noSplash.rawValue)
+    }
   }
 }

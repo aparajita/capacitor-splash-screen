@@ -8,15 +8,15 @@
 import Capacitor
 
 extension WSSplashScreen {
-  func hideSplash(withOptions options: HideOptions, pluginCall call: CAPPluginCall?, completion: @escaping () -> Void) {
+  func hideSplash(withOptions options: HideOptions, pluginCall call: CAPPluginCall?) {
     guard isVisible else {
       return
     }
 
     DispatchQueue.main.async {
       UIView.animate(
-        withDuration: Double(options.fadeOutDuration) / 1000,
-        delay: Double(options.delay) / 1000,
+        withDuration: options.fadeOutDuration,
+        delay: options.delay,
         options: [.curveLinear],
         animations: {
           self.splashView?.alpha = 0
@@ -24,7 +24,7 @@ extension WSSplashScreen {
         },
         completion: { _ in
           self.tearDown()
-          completion()
+          call?.success()
         }
       )
     }
