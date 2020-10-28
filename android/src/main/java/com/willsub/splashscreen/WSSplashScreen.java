@@ -5,11 +5,13 @@ import com.getcapacitor.*;
 @NativePlugin()
 public class WSSplashScreen extends Plugin {
     private Config config;
+    private final Logger logger = new Logger();
+    private final String tag = getLogTag();
 
     @Override
     public void load() {
         config = Config.getInstance(this);
-        // TODO setLogLevel()
+        logger.setLogLevel(Logger.LogLevel.info);
         Splash.showOnLaunch(this, config);
     }
 
@@ -20,7 +22,7 @@ public class WSSplashScreen extends Plugin {
     @PluginMethod()
     public void show(final PluginCall call) {
         Splash.ShowOptions options = new Splash.ShowOptions(this, call, false);
-        Logger.debug(options.toString());
+        logger.debug(tag, options.toString());
         Splash.show(this, call, options, config);
     }
 

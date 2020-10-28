@@ -23,7 +23,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 
-import com.getcapacitor.Logger;
 import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginCall;
 
@@ -54,6 +53,8 @@ public class Splash {
     private static final String FULLSCREEN_OPTION = "androidFullscreen";
     private static final String IMAGE_MODE_OPTION = "androidImageDisplayMode";
 
+    private static final Logger logger = new Logger();
+    private static final String logTag = "Splash";
     private static final HashMap<String, ImageView.ScaleType> displayModeMap;
     private static final HashMap<String, Integer> spinnerStyleMap;
     private static boolean isHiding = false;
@@ -117,7 +118,6 @@ public class Splash {
         return (int) milliseconds;
     }
 
-    @SuppressLint("UseCompatLoadingForDrawables")
     private static void buildViews(Context context, ShowOptions options, PluginCall call, Config config) {
         if (splashView == null) {
             boolean found;
@@ -143,7 +143,7 @@ public class Splash {
             }
 
             if (!found) {
-                Logger.warn("No splash image or layout found");
+                logger.warn(logTag, "No splash image or layout found");
             }
         }
 
@@ -158,6 +158,7 @@ public class Splash {
             int imageId = getResourceId(context, resourceName, "drawable");
             splashImage = context.getResources().getDrawable(imageId, context.getTheme());
             splashView = new ImageView(context);
+            logger.info(logTag, "Using image \"" + resourceName + "\"");
             return true;
         } catch (Resources.NotFoundException ex) {
             return false;
@@ -176,6 +177,7 @@ public class Splash {
 
             try {
                 splashView = inflator.inflate(layoutId, root, false);
+                logger.info(logTag, "Using layout \"" + layoutName + "\"");
             } catch (InflateException ex) {
                 return false;
             }
@@ -198,7 +200,7 @@ public class Splash {
                 splashView.setBackgroundColor(parseColor(backgroundColor));
             }
         } catch (IllegalArgumentException ex) {
-            Logger.debug("Background color '" + backgroundColor + "' not applied");
+            logger.debug(logTag, "Background color '" + backgroundColor + "' not applied");
         }
     }
 
@@ -271,7 +273,7 @@ public class Splash {
                 ColorStateList colorStateList = new ColorStateList(states, colors);
                 spinner.setIndeterminateTintList(colorStateList);
             } catch (IllegalArgumentException ex) {
-                Logger.debug("Spinner color '" + spinnerColor + "' not applied");
+                logger.debug(logTag, "Spinner color '" + spinnerColor + "' not applied");
             }
         }
     }
@@ -304,10 +306,10 @@ public class Splash {
         double showDuration = config.getDoubleOption(DURATION_OPTION, null, Splash.DEFAULT_SHOW_DURATION);
 
         if (showDuration == 0) {
-            Logger.info("showDuration = 0, splash screen disabled");
+            logger.info(logTag, "showDuration = 0, splash screen disabled");
         } else {
             ShowOptions options = new ShowOptions(plugin, null, true);
-            Logger.debug(options.toString());
+            logger.debug(logTag, options.toString());
             show(plugin, null, options, config);
         }
     }
@@ -372,7 +374,7 @@ public class Splash {
         try {
             addSplashView(activity, splashView, params);
         } catch (IllegalStateException | IllegalArgumentException ex) {
-            Logger.error("Could not add splash view");
+            logger.error(logTag, "Could not add splash view");
             return false;
         }
 

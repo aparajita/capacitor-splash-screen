@@ -8,8 +8,6 @@
 import Capacitor
 
 class Logger {
-  var level: LogLevel = .info
-
   // Log levels from lowest to highest. Log messages at or below the current log level
   // are displayed.
   enum LogLevel: Int {
@@ -20,6 +18,16 @@ class Logger {
     case debug
     case trace
   }
+
+  let tag = String(describing: WSSplashScreen.self)
+  var level: LogLevel = .info
+  var prefixes: [LogLevel: String] = [
+    .error: "🔴",
+    .warn: "🟠",
+    .info: "🟢",
+    .debug: "👉",
+    .trace: "🔎"
+  ]
 
   func setLogLevel(_ logLevel: String) {
     switch logLevel.lowercased() {
@@ -42,64 +50,65 @@ class Logger {
       level = .off
 
     default:
-      level = .info
+      // ignore
+      break
     }
   }
 
-  private func canLog(withLevel level: LogLevel) -> Bool {
+  private func canLog(atLevel level: LogLevel) -> Bool {
     return self.level != .off && self.level.rawValue >= level.rawValue
   }
 
   /*
    * Print a message to the log.
    */
-  func log(_ prefix: String, _ items: [Any]) {
-    let message = items.map { "\($0)" }.joined(separator: " ")
-    CAPLog.print("\(prefix) [\(String(describing: WSSplashScreen.self))]", message)
+  private func print(withLevel level: LogLevel, items: [Any]) {
+    if canLog(atLevel: level) {
+      let prefix = prefixes[level] ?? "" // This will never actually fail
+      let message = items.map { "\($0)" }.joined(separator: " ")
+      CAPLog.print("\(prefix) [\(tag)]", message)
+    }
   }
 
   /*
    * Print a trace message to the log.
    */
   func trace(_ items: Any...) {
-    if canLog(withLevel: .trace) {
-      log("🔎", items)
-    }
+    print(withLevel: .trace, items: items)
   }
 
   /*
    * Print a debug message to the log.
    */
   func debug(_ items: Any...) {
-    if canLog(withLevel: .debug) {
-      log("👉", items)
-    }
+    print(withLevel: .debug, items: items)
   }
 
   /*
    * Print an info message to the log.
    */
   func info(_ items: Any...) {
-    if canLog(withLevel: .info) {
-      log("🟢", items)
-    }
+    print(withLevel: .info, items: items)
+  }
+
+  /*
+   * Print an info message to the log.
+   */
+  func log(_ items: Any...) {
+    print(withLevel: .info, items: items)
   }
 
   /*
    * Print a warning message to the log.
    */
   func warn(_ items: Any...) {
-    if canLog(withLevel: .warn) {
-      log("🟠", items)
-    }
+    print(withLevel: .warn, items: items)
   }
 
   /*
    * Print an error message to the log.
    */
   func error(_ items: Any...) {
-    if canLog(withLevel: .error) {
-      log("🔴", items)
-    }
+    print(withLevel: .error, items: items)
   }
 }
