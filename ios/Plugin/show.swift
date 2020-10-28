@@ -25,7 +25,7 @@ extension WSSplashScreen {
 
   func showOnLaunch() {
     let options = ShowOptions(withPlugin: self, pluginCall: nil, isLaunchSplash: true)
-    debug("show at launch:", options)
+    logger.debug("show at launch:", options)
     showSplash(withOptions: options, pluginCall: nil)
   }
 
@@ -176,7 +176,7 @@ extension WSSplashScreen {
       return uiColor
     }
 
-    self.warn("Invalid hex color: \(hex)")
+    logger.warn("Invalid hex color: \(hex)")
     return nil
   }
 }

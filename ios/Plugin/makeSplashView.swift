@@ -42,7 +42,7 @@ extension WSSplashScreen {
       makeImageSplashView()
 
     } else {
-      warn("No splash image or storyboard found")
+      logger.warn("No splash image or storyboard found")
     }
 
     guard splashView != nil else {
@@ -110,13 +110,13 @@ extension WSSplashScreen {
       splashView = NSKeyedUnarchiver.unarchiveObject(with: archive) as? UIView
 
       if splashView != nil {
-        info("Using storyboard \"\(viewInfo.resourceName)\"")
+        logger.info("Using storyboard \"\(viewInfo.resourceName)\"")
       } else {
-        error("Unable to clone the \"\(viewInfo.resourceName)\" storyboard view")
+        logger.error("Unable to clone the \"\(viewInfo.resourceName)\" storyboard view")
       }
 
     } else {
-      error("Unable to instantiate the \"\(viewInfo.resourceName)\" storyboard view controller")
+      logger.error("Unable to instantiate the \"\(viewInfo.resourceName)\" storyboard view controller")
     }
   }
 
@@ -127,6 +127,6 @@ extension WSSplashScreen {
    */
   func makeImageSplashView() {
     splashView = UIImageView(image: viewInfo.image)
-    self.info("Using image \"\(viewInfo.resourceName)\"")
+    logger.self.info("Using image \"\(viewInfo.resourceName)\"")
   }
 }

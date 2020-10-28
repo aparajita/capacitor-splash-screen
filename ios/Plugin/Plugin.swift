@@ -89,7 +89,7 @@ public class WSSplashScreen: CAPPlugin {
   var spinner: UIActivityIndicatorView?
   var imageContentMode: UIView.ContentMode = .scaleAspectFill
   var isVisible: Bool = false
-  var logLevel = LogLevel.info
+  var logger = Logger()
 
   /*
    * Called when the plugin is loaded. Note the web view is not initialized yet,
@@ -100,9 +100,9 @@ public class WSSplashScreen: CAPPlugin {
     showDuration = getConfigDouble(withKeyPath: "showDuration") ?? kDefaultShowDuration
 
     if showDuration == 0 {
-      info("showDuration = 0, splash screen disabled")
+      logger.warn("showDuration = 0, splash screen disabled")
     } else {
-      setLogLevel()
+      logger.setLogLevel(getConfigString(withKeyPath: "logLevel") ?? "info")
       showOnLaunch()
     }
   }
@@ -112,7 +112,7 @@ public class WSSplashScreen: CAPPlugin {
    */
   @objc public func show(_ call: CAPPluginCall) {
     let options = ShowOptions(withPlugin: self, pluginCall: call, isLaunchSplash: false)
-    debug("show():", options)
+    logger.debug("show():", options)
     showSplash(withOptions: options, pluginCall: call)
   }
 
@@ -125,7 +125,7 @@ public class WSSplashScreen: CAPPlugin {
     }
 
     let options = HideOptions(plugin: self, call: call)
-    debug("hide():", options)
+    logger.debug("hide():", options)
     hideSplash(withOptions: options, pluginCall: call)
   }
 

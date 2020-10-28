@@ -1,5 +1,5 @@
 //
-//  log.swift
+//  Logger.swift
 //  WillsubCapacitorSplashscreen
 //
 //  Created by Aparajita on 10/13/20.
@@ -7,7 +7,9 @@
 
 import Capacitor
 
-extension WSSplashScreen {
+class Logger {
+  var level: LogLevel = .info
+
   // Log levels from lowest to highest. Log messages at or below the current log level
   // are displayed.
   enum LogLevel: Int {
@@ -16,34 +18,36 @@ extension WSSplashScreen {
     case warn
     case info
     case debug
+    case trace
   }
 
-  func setLogLevel() {
-    if let level = getConfigString(withKeyPath: "logLevel") {
-      switch level {
-      case "debug":
-        logLevel = .debug
+  func setLogLevel(_ logLevel: String) {
+    switch logLevel.lowercased() {
+    case "trace":
+      level = .trace
 
-      case "info":
-        logLevel = .info
+    case "debug":
+      level = .debug
 
-      case "warn":
-        logLevel = .warn
+    case "info":
+      level = .info
 
-      case "error":
-        logLevel = .error
+    case "warn":
+      level = .warn
 
-      case "off":
-        logLevel = .off
+    case "error":
+      level = .error
 
-      default:
-        logLevel = .info
-      }
+    case "off":
+      level = .off
+
+    default:
+      level = .info
     }
   }
 
   private func canLog(withLevel level: LogLevel) -> Bool {
-    return logLevel != .off && logLevel.rawValue >= level.rawValue
+    return self.level != .off && self.level.rawValue >= level.rawValue
   }
 
   /*
@@ -52,6 +56,15 @@ extension WSSplashScreen {
   func log(_ prefix: String, _ items: [Any]) {
     let message = items.map { "\($0)" }.joined(separator: " ")
     CAPLog.print("\(prefix) [\(String(describing: WSSplashScreen.self))]", message)
+  }
+
+  /*
+   * Print a trace message to the log.
+   */
+  func trace(_ items: Any...) {
+    if canLog(withLevel: .trace) {
+      log("🔎", items)
+    }
   }
 
   /*
