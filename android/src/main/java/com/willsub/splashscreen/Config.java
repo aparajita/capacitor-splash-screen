@@ -38,69 +38,7 @@ public class Config {
         return plugin;
     }
 
-    private JSONObject getConfigObjectDeepest(String keyPath) {
-        String[] keys = keyPath.split("\\.");
-
-        if (keys.length == 0) {
-            return null;
-        }
-
-        // Get the top level from config
-        JSONObject object = config.getObject(keys[0]);
-
-        if (object == null) {
-            return null;
-        }
-
-        // All keys up to the last should be objects
-        for (int i = 1; i < keys.length - 1; i++) {
-            object = object.optJSONObject(keys[i]);
-
-            if (object == null) {
-                return null;
-            }
-        }
-
-        return object;
-    }
-
-    private Object getTypedValue(JSONObject object, String key, Class type) {
-        if (type == String.class) {
-            try {
-                return object.getString(key);
-            } catch (JSONException e) {
-                return null;
-            }
-        }
-
-        if (type == Integer.class) {
-            try {
-                return object.getInt(key);
-            } catch (JSONException e) {
-                return null;
-            }
-        }
-
-        if (type == Double.class || type == Float.class) {
-            try {
-                return (Double) object.getDouble(key);
-            } catch (JSONException e) {
-                return null;
-            }
-        }
-
-        if (type == Boolean.class) {
-            try {
-                return object.getBoolean(key);
-            } catch (JSONException e) {
-                return null;
-            }
-        }
-
-        return null;
-    }
-
-    /*
+    /**
      * Get a value from the global config.
      *
      * If the last segment of the key path begins with "ios" or "android",
@@ -164,6 +102,68 @@ public class Config {
         return defaultValue;
     }
 
+    private JSONObject getConfigObjectDeepest(String keyPath) {
+        String[] keys = keyPath.split("\\.");
+
+        if (keys.length == 0) {
+            return null;
+        }
+
+        // Get the top level from config
+        JSONObject object = config.getObject(keys[0]);
+
+        if (object == null) {
+            return null;
+        }
+
+        // All keys up to the last should be objects
+        for (int i = 1; i < keys.length - 1; i++) {
+            object = object.optJSONObject(keys[i]);
+
+            if (object == null) {
+                return null;
+            }
+        }
+
+        return object;
+    }
+
+    private Object getTypedValue(JSONObject object, String key, Class type) {
+        if (type == String.class) {
+            try {
+                return object.getString(key);
+            } catch (JSONException e) {
+                return null;
+            }
+        }
+
+        if (type == Integer.class) {
+            try {
+                return object.getInt(key);
+            } catch (JSONException e) {
+                return null;
+            }
+        }
+
+        if (type == Double.class || type == Float.class) {
+            try {
+                return (Double) object.getDouble(key);
+            } catch (JSONException e) {
+                return null;
+            }
+        }
+
+        if (type == Boolean.class) {
+            try {
+                return object.getBoolean(key);
+            } catch (JSONException e) {
+                return null;
+            }
+        }
+
+        return null;
+    }
+
     public String getString(String keyPath) {
         return this.getString(keyPath, (String) null);
     }
@@ -204,7 +204,7 @@ public class Config {
         return (Boolean) this.<Boolean>getConfigValue(keyPath, defaultValue, Boolean.class);
     }
 
-    /*
+    /**
      * Get a value from a plugin call, falling back to global config
      */
     public Object getOptionValue(String keyPath, PluginCall pluginCall, Object defaultValue, Class type) {
@@ -227,7 +227,7 @@ public class Config {
         return this.getConfigValue(keyPath, defaultValue, type);
     }
 
-    /*
+    /**
      * Get a single value from the call's options.
      *
      * If the last segment of the key path begins with "ios" or "android",
@@ -279,7 +279,7 @@ public class Config {
         return null;
     }
 
-    /*
+    /**
      * Given a dotted key path, get the last JSObject in the path.
      */
     private JSObject getOptionObjectDeepest(String keyPath, PluginCall call) {
