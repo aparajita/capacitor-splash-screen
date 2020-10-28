@@ -1,16 +1,20 @@
 package com.willsub.splashscreen;
 
 import com.getcapacitor.CapConfig;
+import com.getcapacitor.JSObject;
 import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginCall;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 
-@SuppressWarnings("rawtypes")
+/**
+ * This is a more flexible version of the CapConfig class. The main difference is it allows
+ * platform-specific options to be placed in a platform subobject without the platform prefix.
+ */
+@SuppressWarnings("ALL")
 public class Config {
-    static final String IOS_CONFIG_PREFIX = "ios";
-    static final String ANDROID_CONFIG_PREFIX = "android";
-    static final String[] PLATFORM_PREFIXES = {IOS_CONFIG_PREFIX, ANDROID_CONFIG_PREFIX};
+    static final String PLATFORM_CONFIG_PREFIX = "android";
 
     private static Config instance = null;
 
@@ -34,9 +38,7 @@ public class Config {
         return plugin;
     }
 
-    // Capacitor 2.0 CapConfig.getInt() can't return null for a missing item.
-    // So we have to parse the key path ourselves.
-    private Object getConfigValue(String keyPath) {
+    private JSONObject getConfigObjectDeepest(String keyPath) {
         String[] keys = keyPath.split("\\.");
 
         if (keys.length == 0) {
@@ -52,15 +54,50 @@ public class Config {
 
         // All keys up to the last should be objects
         for (int i = 1; i < keys.length - 1; i++) {
-            object = (JSONObject) object.opt(keys[i]);
+            object = object.optJSONObject(keys[i]);
 
             if (object == null) {
                 return null;
             }
         }
 
-        // The last key should be the actual value
-        return object.opt(keys[keys.length - 1]);
+        return object;
+    }
+
+    private Object getTypedValue(JSONObject object, String key, Class type) {
+        if (type == String.class) {
+            try {
+                return object.getString(key);
+            } catch (JSONException e) {
+                return null;
+            }
+        }
+
+        if (type == Integer.class) {
+            try {
+                return object.getInt(key);
+            } catch (JSONException e) {
+                return null;
+            }
+        }
+
+        if (type == Double.class || type == Float.class) {
+            try {
+                return (Double) object.getDouble(key);
+            } catch (JSONException e) {
+                return null;
+            }
+        }
+
+        if (type == Boolean.class) {
+            try {
+                return object.getBoolean(key);
+            } catch (JSONException e) {
+                return null;
+            }
+        }
+
+        return null;
     }
 
     /*
@@ -82,50 +119,46 @@ public class Config {
      *   }
      * }
      */
-    public <T> T getValue(String keyPath, Class type, T defaultValue) {
+    public Object getConfigValue(String keyPath, Object defaultValue, Class type) {
         if (config == null) {
             return defaultValue;
         }
 
         try {
             // Try the key path as is
-            Object value = getConfigValue(keyPath);
+            JSONObject object = getConfigObjectDeepest(keyPath);
 
-            if (value != null) {
-                @SuppressWarnings("unchecked")
-                T result = (T) value;
-                return result;
+            if (object == null) {
+                return null;
             }
 
-            // If the key path does not exist and the last segment of the path begins with "ios" or "android",
-            // split the last segment and try again.
-            final String[] keys = keyPath.split("\\.");
-            final String lastKey = keys[keys.length - 1];
+            String key = getKeyFromKeyPath(keyPath);
+            Object value = getTypedValue(object, key, type);
 
-            for (String prefix : PLATFORM_PREFIXES) {
-                if (lastKey.startsWith(prefix)) {
-                    String suffix = lastKey.substring(prefix.length());
-                    suffix = suffix.substring(0, 1).toLowerCase() + suffix.substring(1);
-                    keys[keys.length - 1] = prefix + "." + suffix;
-                    StringBuilder newKeyPath = new StringBuilder(keys[0]);
+            if (value != null) {
+                return value;
+            }
 
-                    for (int i = 1; i < keys.length; i++) {
-                        newKeyPath.append(".").append(keys[i]);
-                    }
+            // If the key path does not exist and the last key begins with "android",
+            // split the last key and try again.
+            final String prefix = PLATFORM_CONFIG_PREFIX;
+            int len = prefix.length();
 
-                    value = getConfigValue(newKeyPath.toString());
+            if (key.startsWith(prefix) && key.length() > prefix.length() && value instanceof JSONObject) {
+                JSONObject platformObject = ((JSONObject) value).getJSONObject(prefix);
+
+                if (platformObject != null) {
+                    String firstLetter = key.substring(len, len + 1).toLowerCase();
+                    String suffix = firstLetter + key.substring(len + 1);
+                    value = getTypedValue(platformObject, suffix, type);
 
                     if (value != null) {
-                        @SuppressWarnings("unchecked")
-                        T result = (T) value;
-                        return result;
+                        return value;
                     }
-
-                    return defaultValue;
                 }
             }
         } catch (Exception e) {
-            // Do nothing
+            // Ignore
         }
 
         return defaultValue;
@@ -136,115 +169,172 @@ public class Config {
     }
 
     public String getString(String keyPath, String defaultValue) {
-        return this.getValue(keyPath, String.class, defaultValue);
+        return (String) this.getConfigValue(keyPath, defaultValue, String.class);
     }
 
-    public int getInt(String keyPath) {
+    public Integer getInt(String keyPath) {
         return this.getInt(keyPath, (Integer) null);
     }
 
-    public int getInt(String keyPath, Integer defaultValue) {
-        return this.getValue(keyPath, Integer.class, defaultValue);
+    public Integer getInt(String keyPath, Integer defaultValue) {
+        return (Integer) this.<Integer>getConfigValue(keyPath, defaultValue, Integer.class);
     }
 
-    public double getDouble(String keyPath) {
+    public Double getDouble(String keyPath) {
         return this.getDouble(keyPath, (Double) null);
     }
 
-    public double getDouble(String keyPath, Double defaultValue) {
-        return this.getValue(keyPath, Double.class, defaultValue);
+    public Double getDouble(String keyPath, Double defaultValue) {
+        return (Double) this.<Double>getConfigValue(keyPath, defaultValue, Double.class);
     }
 
-    public double getFloat(String keyPath) {
+    public Float getFloat(String keyPath) {
         return this.getFloat(keyPath, (Float) null);
     }
 
-    public double getFloat(String keyPath, Float defaultValue) {
-        return this.getValue(keyPath, Float.class, defaultValue);
+    public Float getFloat(String keyPath, Float defaultValue) {
+        return (Float) this.<Float>getConfigValue(keyPath, defaultValue, Float.class);
     }
 
-    public boolean getBoolean(String keyPath) {
+    public Boolean getBoolean(String keyPath) {
         return this.getBoolean(keyPath, (Boolean) null);
     }
 
-    public boolean getBoolean(String keyPath, Boolean defaultValue) {
-        return this.getValue(keyPath, Boolean.class, defaultValue);
+    public Boolean getBoolean(String keyPath, Boolean defaultValue) {
+        return (Boolean) this.<Boolean>getConfigValue(keyPath, defaultValue, Boolean.class);
     }
 
-    private Object getTypedValue(String keyPath, PluginCall call, Class type) {
-        if (type == String.class) {
-            return call.getString(keyPath, null);
-        } else if (type == Integer.class) {
-            return call.getInt(keyPath, null);
-        } else if (type == Double.class) {
-            return call.getDouble(keyPath, null);
-        } else if (type == Float.class) {
-            return call.getFloat(keyPath, null);
-        } else if (type == Boolean.class) {
-            return call.getBoolean(keyPath, null);
+    /*
+     * Get a value from a plugin call, falling back to global config
+     */
+    public Object getOptionValue(String keyPath, PluginCall pluginCall, Object defaultValue, Class type) {
+        if (pluginCall != null) {
+            // First try the plugin call's options
+            final Object value = getOption(keyPath, pluginCall, type);
+
+            try {
+                // If it exists, return it
+                if (value != null) {
+                    return value;
+                }
+            } catch (ClassCastException e) {
+                return defaultValue;
+            }
+        }
+
+        // If the value can't be found in the call's options, try global config
+        keyPath = String.format("plugins.%s.%s", plugin.getPluginHandle().getId(), keyPath);
+        return this.getConfigValue(keyPath, defaultValue, type);
+    }
+
+    /*
+     * Get a single value from the call's options.
+     *
+     * If the last segment of the key path begins with "ios" or "android",
+     * split the key at the prefix and see if a value exists in a nested object.
+     * This allows options to be structured either as:
+     *
+     * {
+     *   iosFoo: 'bar'
+     * }
+     *
+     * or:
+     *
+     * {
+     *   ios: {
+     *     foo: 'bar'
+     *   }
+     * }
+     */
+    public Object getOption(String keyPath, PluginCall call, Class type) {
+        JSObject object = getOptionObjectDeepest(keyPath, call);
+
+        if (object == null) {
+            return null;
+        }
+
+        // See if the object has the key. If so, return its value.
+        String key = getKeyFromKeyPath(keyPath);
+        Object value = getTypedValue(object, key, type);
+
+        if (value != null) {
+            return value;
+        }
+
+        // If the key doesn't exist and begins with the platform prefix,
+        // split the key and check for a platform object.
+        String prefix = "android";
+        int len = prefix.length();
+
+        if (key.startsWith(prefix) && key.length() > len) {
+            JSObject platformObject = object.getJSObject(prefix);
+
+            if (platformObject != null) {
+                String firstLetter = key.substring(len, len + 1).toLowerCase();
+                String suffix = firstLetter + key.substring(len + 1);
+                return getTypedValue(platformObject, suffix, type);
+            }
         }
 
         return null;
     }
 
     /*
-     * Get a value from a plugin call, falling back to global config
+     * Given a dotted key path, get the last JSObject in the path.
      */
-    public <T> T getValue(String keyPath, PluginCall pluginCall, Class type, T defaultValue) {
-        if (pluginCall != null) {
-            final Object value = getTypedValue(keyPath, pluginCall, type);
+    private JSObject getOptionObjectDeepest(String keyPath, PluginCall call) {
+        String[] keys = keyPath.split("\\.");
+        JSObject object = call.getData();
 
-            try {
-                if (value != null) {
-                    @SuppressWarnings("unchecked") final T result = (T) value;
-                    return result;
-                }
-            } catch (Exception e) {
-                return defaultValue;
-            }
+        for (int i = 0; i < keys.length - 1 && object != null; i++) {
+            object = object.getJSObject(keys[i]);
         }
 
-        keyPath = String.format("plugins.%s.%s", plugin.getPluginHandle().getId(), keyPath);
-        return this.getValue(keyPath, type, defaultValue);
+        return object;
     }
 
-    public String getString(String keyPath, PluginCall pluginCall) {
-        return getString(keyPath, pluginCall, (String) null);
+    private String getKeyFromKeyPath(String keyPath) {
+        String[] keys = keyPath.split("\\.");
+        return keys[keys.length - 1];
     }
 
-    public String getString(String keyPath, PluginCall pluginCall, String defaultValue) {
-        return getValue(keyPath, pluginCall, String.class, defaultValue);
+    public String getStringOption(String keyPath, PluginCall pluginCall) {
+        return getStringOption(keyPath, pluginCall, (String) null);
     }
 
-    public int getInt(String keyPath, PluginCall pluginCall) {
-        return getInt(keyPath, pluginCall, (Integer) null);
+    public String getStringOption(String keyPath, PluginCall pluginCall, String defaultValue) {
+        return (String) getOptionValue(keyPath, pluginCall, defaultValue, String.class);
     }
 
-    public int getInt(String keyPath, PluginCall pluginCall, int defaultValue) {
-        return getValue(keyPath, pluginCall, Integer.class, defaultValue);
+    public Integer getIntOption(String keyPath, PluginCall pluginCall) {
+        return getIntOption(keyPath, pluginCall, (Integer) null);
     }
 
-    public double getDouble(String keyPath, PluginCall pluginCall) {
-        return getDouble(keyPath, pluginCall, (Double) null);
+    public Integer getIntOption(String keyPath, PluginCall pluginCall, Integer defaultValue) {
+        return (Integer) getOptionValue(keyPath, pluginCall, defaultValue, Integer.class);
     }
 
-    public double getDouble(String keyPath, PluginCall pluginCall, double defaultValue) {
-        return getValue(keyPath, pluginCall, Double.class, defaultValue);
+    public Double getDoubleOption(String keyPath, PluginCall pluginCall) {
+        return getDoubleOption(keyPath, pluginCall, (Double) null);
     }
 
-    public double getFloat(String keyPath, PluginCall pluginCall) {
-        return getFloat(keyPath, pluginCall, (Float) null);
+    public Double getDoubleOption(String keyPath, PluginCall pluginCall, Double defaultValue) {
+        return (Double) getOptionValue(keyPath, pluginCall, defaultValue, Double.class);
     }
 
-    public double getFloat(String keyPath, PluginCall pluginCall, float defaultValue) {
-        return getValue(keyPath, pluginCall, Float.class, defaultValue);
+    public Float getFloatOption(String keyPath, PluginCall pluginCall) {
+        return getFloatOption(keyPath, pluginCall, (Float) null);
     }
 
-    public boolean getBoolean(String keyPath, PluginCall pluginCall) {
-        return getBoolean(keyPath, pluginCall, (Boolean) null);
+    public Float getFloatOption(String keyPath, PluginCall pluginCall, float defaultValue) {
+        return (Float) getOptionValue(keyPath, pluginCall, defaultValue, Float.class);
     }
 
-    public boolean getBoolean(String keyPath, PluginCall pluginCall, Boolean defaultValue) {
-        return getValue(keyPath, pluginCall, Boolean.class, defaultValue);
+    public Boolean getBooleanOption(String keyPath, PluginCall pluginCall) {
+        return getBooleanOption(keyPath, pluginCall, (Boolean) null);
+    }
+
+    public Boolean getBooleanOption(String keyPath, PluginCall pluginCall, Boolean defaultValue) {
+        return (Boolean) getOptionValue(keyPath, pluginCall, defaultValue, Boolean.class);
     }
 }

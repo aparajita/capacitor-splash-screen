@@ -21,6 +21,15 @@ private let kDefaultFadeOutDuration = 0.2
 private let kDefaultShowDuration = 3.0
 private let kDefaultAutoHide = true
 
+/*
+ * iOS animation methods usually want seconds for durations.
+ * Convert milliseconds to seconds if necessary.
+ */
+private func toSeconds(_ value: Double) -> Double {
+  // We consider any values >= 20 to be milliseconds
+  return value >= 20 ? value / 1000 : value
+}
+
 @objc(WSSplashScreen)
 public class WSSplashScreen: CAPPlugin {
   enum ErrorType: String {
@@ -39,12 +48,9 @@ public class WSSplashScreen: CAPPlugin {
     var isLaunchSplash: Bool
 
     init(withPlugin plugin: WSSplashScreen, pluginCall call: CAPPluginCall?, isLaunchSplash: Bool) {
-      showDuration = WSSplashScreen.toSeconds(
-        plugin.getConfigDouble(withKeyPath: "showDuration", pluginCall: call) ?? kDefaultShowDuration)
-      fadeInDuration = WSSplashScreen.toSeconds(
-        plugin.getConfigDouble(withKeyPath: "fadeInDuration", pluginCall: call) ?? kDefaultFadeInDuration)
-      fadeOutDuration = WSSplashScreen.toSeconds(
-        plugin.getConfigDouble(withKeyPath: "fadeOutDuration", pluginCall: call) ?? kDefaultFadeOutDuration)
+      showDuration = toSeconds(plugin.getConfigDouble(withKeyPath: "showDuration", pluginCall: call) ?? kDefaultShowDuration)
+      fadeInDuration = toSeconds(plugin.getConfigDouble(withKeyPath: "fadeInDuration", pluginCall: call) ?? kDefaultFadeInDuration)
+      fadeOutDuration = toSeconds(plugin.getConfigDouble(withKeyPath: "fadeOutDuration", pluginCall: call) ?? kDefaultFadeOutDuration)
       backgroundColor = plugin.getConfigString(withKeyPath: "backgroundColor", pluginCall: call)
       animated = plugin.getConfigBool(withKeyPath: "animated", pluginCall: call) ?? false
 
@@ -65,8 +71,8 @@ public class WSSplashScreen: CAPPlugin {
     var fadeOutDuration: Double
 
     init(plugin: WSSplashScreen, call: CAPPluginCall?) {
-      delay = WSSplashScreen.toSeconds(plugin.getConfigDouble(withKeyPath: "delay", pluginCall: call) ?? 0)
-      fadeOutDuration = WSSplashScreen.toSeconds(
+      delay = toSeconds(plugin.getConfigDouble(withKeyPath: "delay", pluginCall: call) ?? 0)
+      fadeOutDuration = toSeconds(
         plugin.getConfigDouble(withKeyPath: "fadeOutDuration", pluginCall: call) ?? kDefaultFadeOutDuration)
     }
   }
@@ -84,15 +90,6 @@ public class WSSplashScreen: CAPPlugin {
   var imageContentMode: UIView.ContentMode = .scaleAspectFill
   var isVisible: Bool = false
   var logLevel = LogLevel.info
-
-  /*
-   * iOS animation methods usually want seconds for durations.
-   * Convert milliseconds to seconds if necessary.
-   */
-  static private func toSeconds(_ value: Double) -> Double {
-    // We consider any values >= 20 to be milliseconds
-    return value >= 20 ? value / 1000 : value
-  }
 
   /*
    * Called when the plugin is loaded. Note the web view is not initialized yet,

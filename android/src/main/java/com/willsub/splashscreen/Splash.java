@@ -32,13 +32,28 @@ import com.getcapacitor.PluginCall;
  */
 @SuppressLint("StaticFieldLeak")
 public class Splash {
-    public static final int DEFAULT_FADE_IN_DURATION = 200;
-    public static final int DEFAULT_FADE_OUT_DURATION = 200;
-    public static final int DEFAULT_SHOW_DURATION = 3000;
-    public static final boolean DEFAULT_AUTO_HIDE = false;
-    public static final boolean DEFAULT_ANIMATE = false;
-    public static final boolean DEFAULT_SHOW_SPINNER = false;
-    public static final boolean DEFAULT_FULLSCREEN_MODE = false;
+    private static final Double DEFAULT_FADE_IN_DURATION = 200.0;
+    private static final Double DEFAULT_FADE_OUT_DURATION = 200.0;
+    private static final Double DEFAULT_SHOW_DURATION = 3000.0;
+    private static final Boolean DEFAULT_AUTO_HIDE = false;
+    private static final Boolean DEFAULT_ANIMATED = false;
+    private static final Boolean DEFAULT_SHOW_SPINNER = false;
+    private static final Boolean DEFAULT_FULLSCREEN_MODE = false;
+
+    private static final String SOURCE_OPTION = "source";
+    private static final String DELAY_OPTION = "delay";
+    private static final String FADE_IN_OPTION = "fadeInDuration";
+    private static final String DURATION_OPTION = "showDuration";
+    private static final String FADE_OUT_OPTION = "fadeOutDuration";
+    private static final String AUTO_HIDE_OPTION = "autoHide";
+    private static final String ANIMATED_OPTION = "animated";
+    private static final String BACKGROUND_OPTION = "backgroundColor";
+    private static final String SHOW_SPINNER_OPTION = "showSpinner";
+    private static final String SPINNER_COLOR_OPTION = "spinnerColor";
+    private static final String SPINNER_STYLE_OPTION = "androidSpinnerStyle";
+    private static final String FULLSCREEN_OPTION = "androidFullscreen";
+    private static final String IMAGE_MODE_OPTION = "androidImageDisplayMode";
+
     private static final HashMap<String, ImageView.ScaleType> displayModeMap;
     private static final HashMap<String, Integer> spinnerStyleMap;
     private static boolean isHiding = false;
@@ -94,7 +109,12 @@ public class Splash {
     // Android wants milliseconds for animation parameters, so for convenience we convert to that.
     private static int toMilliseconds(double value) {
         // Durations >= 20 are considered milliseconds, otherwise seconds.
-        return value >= 20 ? (int) value : (int) (value * 1000);
+        if (value >= 20) {
+            return (int) value;
+        }
+
+        double milliseconds = value * 1000;
+        return (int) milliseconds;
     }
 
     @SuppressLint("UseCompatLoadingForDrawables")
@@ -106,10 +126,10 @@ public class Splash {
             String resource = "splash";
 
             // See if a resource was specified in the call or the config. This takes precedence.
-            String configResource = config.getString("resource", call);
+            String source = config.getStringOption(SOURCE_OPTION, call);
 
-            if (configResource != null && !configResource.isEmpty()) {
-                resource = configResource;
+            if (source != null && !source.isEmpty()) {
+                resource = source;
             }
 
             if (resource.equals("*")) {
@@ -171,7 +191,7 @@ public class Splash {
     private static void setBackgroundColor(Config config, PluginCall call) {
         // Clear any existing background color by setting it to transparent black
         splashView.setBackgroundColor(0);
-        String backgroundColor = config.getString("backgroundColor", call);
+        String backgroundColor = config.getStringOption(BACKGROUND_OPTION, call);
 
         try {
             if (backgroundColor != null) {
@@ -184,7 +204,7 @@ public class Splash {
 
     private static void setScaleType(ImageView image, Config config, PluginCall call) {
         ImageView.ScaleType scaleType = displayModeMap.get("fit");
-        String displayModeName = config.getString("androidImageDisplayMode", call);
+        String displayModeName = config.getStringOption(IMAGE_MODE_OPTION, call);
 
         if (displayModeName != null) {
             ImageView.ScaleType mode = displayModeMap.get(displayModeName.toLowerCase());
@@ -216,7 +236,7 @@ public class Splash {
     }
 
     private static void makeSpinner(Context context, PluginCall call, Config config) {
-        String spinnerStyle = config.getString("androidSpinnerStyle", call);
+        String spinnerStyle = config.getStringOption(SPINNER_STYLE_OPTION, call);
 
         if (spinnerStyle != null) {
             Integer spinnerBarStyle = spinnerStyleMap.get(spinnerStyle);
@@ -231,7 +251,7 @@ public class Splash {
         }
 
         spinner.setIndeterminate(true);
-        String spinnerColor = config.getString("spinnerColor", call);
+        String spinnerColor = config.getStringOption(SPINNER_COLOR_OPTION, call);
 
         if (spinnerColor != null) {
             try {
@@ -263,7 +283,7 @@ public class Splash {
 
         splashView.setFitsSystemWindows(true);
         setBackgroundColor(config, call);
-        isFullscreen = config.getBoolean("androidFullscreen", call, DEFAULT_FULLSCREEN_MODE);
+        isFullscreen = config.getBooleanOption(FULLSCREEN_OPTION, call, DEFAULT_FULLSCREEN_MODE);
 
         if (splashView instanceof ImageView) {
             ImageView image = (ImageView) splashView;
@@ -281,9 +301,15 @@ public class Splash {
      * Show the splash screen on launch without fading in
      */
     public static void showOnLaunch(final Plugin plugin, final Config config) {
-        ShowOptions options = new ShowOptions(plugin, null, true);
-        Logger.debug(options.toString());
-        show(plugin, null, options, config);
+        double showDuration = config.getDoubleOption(DURATION_OPTION, null, Splash.DEFAULT_SHOW_DURATION);
+
+        if (showDuration == 0) {
+            Logger.info("showDuration = 0, splash screen disabled");
+        } else {
+            ShowOptions options = new ShowOptions(plugin, null, true);
+            Logger.debug(options.toString());
+            show(plugin, null, options, config);
+        }
     }
 
     /*
@@ -392,16 +418,6 @@ public class Splash {
 
                 new Handler().postDelayed(() -> {
                     if (options.autoHide) {
-                        // Warn the user if the launch splash was hidden automatically,
-                        // which means they could be experiencing an app
-                        // that feels slower than it actually is.
-                        if (options.isLaunchSplash) {
-                            String pluginId = plugin.getPluginHandle().getId();
-                            Logger.debug("The splash screen was automatically hidden after " + options.showDuration + " ms." +
-                                    " We recommend that you call " + pluginId + ".hide() as soon as your web app is loaded instead." +
-                                    " Read more at https://capacitorjs.com/docs/apis/splash-screen#hiding-the-splash-screen");
-                        }
-
                         HideOptions hideOptions = new HideOptions(plugin, call);
                         Splash.hide(activity, call, hideOptions);
                     }
@@ -509,7 +525,7 @@ public class Splash {
         }
 
         Handler mainHandler = new Handler(activity.getMainLooper());
-        int delay = toMilliseconds(call.getDouble("delay", 0.0));
+        int delay = toMilliseconds(call.getDouble(DELAY_OPTION, 0.0));
 
         mainHandler.postDelayed(() -> {
             try {
@@ -628,20 +644,20 @@ public class Splash {
 
         public ShowOptions(Plugin plugin, PluginCall call, Boolean isLaunchSplash) {
             Config config = Config.getInstance(plugin);
-            showDuration = toMilliseconds(config.getDouble("showDuration", call, DEFAULT_SHOW_DURATION));
-            fadeInDuration = toMilliseconds(config.getDouble("fadeInDuration", call, DEFAULT_FADE_IN_DURATION));
-            fadeOutDuration = toMilliseconds(config.getDouble("fadeOutDuration", call, DEFAULT_FADE_OUT_DURATION));
-            backgroundColor = config.getString("backgroundColor", call);
-            animated = config.getBoolean("animate", call, DEFAULT_ANIMATE);
+            showDuration = toMilliseconds(config.getDoubleOption(DURATION_OPTION, call, DEFAULT_SHOW_DURATION));
+            fadeInDuration = toMilliseconds(config.getDoubleOption(FADE_IN_OPTION, call, DEFAULT_FADE_IN_DURATION));
+            fadeOutDuration = toMilliseconds(config.getDoubleOption(FADE_OUT_OPTION, call, DEFAULT_FADE_OUT_DURATION));
+            backgroundColor = config.getStringOption(BACKGROUND_OPTION, call);
+            animated = config.getBooleanOption(ANIMATED_OPTION, call, DEFAULT_ANIMATED);
 
             // If the splash is marked as animated, it's up to the dev to hide the splash
             if (animated) {
                 autoHide = false;
             } else {
-                autoHide = config.getBoolean("autoHide", call, DEFAULT_AUTO_HIDE);
+                autoHide = config.getBooleanOption(AUTO_HIDE_OPTION, call, DEFAULT_AUTO_HIDE);
             }
 
-            showSpinner = config.getBoolean("showSpinner", call, DEFAULT_SHOW_SPINNER);
+            showSpinner = config.getBooleanOption(SHOW_SPINNER_OPTION, call, DEFAULT_SHOW_SPINNER);
             this.isLaunchSplash = isLaunchSplash;
         }
 
@@ -668,8 +684,8 @@ public class Splash {
 
         public HideOptions(Plugin plugin, PluginCall call) {
             Config config = Config.getInstance(plugin);
-            delay = toMilliseconds(config.getDouble("delay", call, 0));
-            fadeOutDuration = toMilliseconds(config.getDouble("fadeOutDuration", call, DEFAULT_FADE_OUT_DURATION));
+            delay = toMilliseconds(config.getDoubleOption(DELAY_OPTION, call, 0.0));
+            fadeOutDuration = toMilliseconds(config.getDoubleOption(FADE_OUT_OPTION, call, DEFAULT_FADE_OUT_DURATION));
         }
 
         @SuppressLint("DefaultLocale")

@@ -31,12 +31,12 @@ extension WSSplashScreen {
 
   func showSplash(withOptions options: ShowOptions, pluginCall call: CAPPluginCall?) {
     // If we haven't yet built the views, do it now
-    if self.splashView == nil {
+    if splashView == nil {
       buildViews(forPluginCall: call)
     }
 
     // Unwrap splashView, make sure we have one
-    guard let splashView = self.splashView else {
+    guard let splashView = splashView else {
       return self.noSplashAvailable(forCall: call)
     }
 

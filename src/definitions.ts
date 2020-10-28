@@ -4,6 +4,21 @@ declare module '@capacitor/core' {
   }
 }
 
+/**
+ * The mode used to place and scale an image splash screen.
+ * Ignored for storyboard-based splash screens. Valid values are:
+ *
+ * fill - Scale the image to fill, not keeping the aspect ratio.
+ *
+ * aspectFill - Scale the image to fill, keeping the aspect ratio. Portions
+ *   of the image may be offscreen as a result.
+ *
+ * fit - Scale and center the image, keeping the aspect ratio, such that
+ *   it fills either the width or height of the containing view.
+ *
+ * center/top/bottom/left/right/topLeft/topRight/bottomLeft/bottomRight -
+ *   Place the image in the given location without scaling.
+ */
 export type WSSplashScreenIosImageDisplayMode =
   | 'fill'
   | 'aspectFill'
@@ -18,6 +33,21 @@ export type WSSplashScreenIosImageDisplayMode =
   | 'bottomLeft'
   | 'bottomRight';
 
+/**
+ * The mode used to place and scale an image splash screen.
+ * Ignored for layout-based splash screens. Valid values are:
+ *
+ * fill - Scale the image to fill, not keeping the aspect ratio.
+ *
+ * aspectFill - Scale the image to fill, keeping the aspect ratio.
+ *   Portions of the image may be offscreen as a result.
+ *
+ * fit - Scale and center the image, keeping the aspect ratio, such that
+ *   it fills either the width or height of the containing view.
+ *
+ * fitTop/fitBottom - Same as fit, but place the image
+ *   at the top or bottom of the screen.
+ */
 export type WSSplashScreenAndroidImageDisplayMode =
   | 'fill'
   | 'aspectFill'
@@ -43,14 +73,45 @@ export type WSSplashScreenAndroidSpinnerStyle =
  */
 export type WSSplashScreenDuration = number;
 
+export interface WSSplashScreenIosShowOptions {
+  /**
+   * See WSSplashScreenShowOptions.iosSpinnerStyle
+   */
+  spinnerStyle?: WSSplashScreenIosSpinnerStyle;
+
+  /**
+   * See WSSplashScreenShowOptions.iosImageDisplayMode
+   */
+  imageDisplayMode?: WSSplashScreenIosImageDisplayMode;
+}
+
+export interface WSSplashScreenAndroidShowOptions {
+  /**
+   * See WSSplashScreenShowOptions.androidSpinnerStyle
+   */
+  spinnerStyle?: WSSplashScreenAndroidSpinnerStyle;
+
+  /**
+   * See WSSplashScreenShowOptions.androidImageDisplayMode
+   */
+  imageDisplayMode?: WSSplashScreenAndroidImageDisplayMode;
+
+  /**
+   * See WSSplashScreenShowOptions.androidFullscreen
+   */
+  fullscreen?: boolean;
+}
+
 export interface WSSplashScreenShowOptions {
   /**
-   * The name of an image or storyboard (iOS) / screen (Android) resource.
-   * On iOS, the default is "Splash", on Android "splash". If the name is
-   * "*", on iOS the configured LaunchScreen storyboard will be used,
-   * and on Android the layout "launch_screen" will be used if present.
+   * The source of the splash screen. On iOS, it may be an image or
+   * storyboard with the given name. On Android, it may be any drawable
+   * or layout with the given name. On iOS, the default is "Splash",
+   * on Android "splash". If the name is "*", on iOS the configured
+   * LaunchScreen storyboard in the app's project will be used,
+   * on Android the layout "launch_screen.xml" will be used if present.
    */
-  resource?: string;
+  source?: string;
 
   /**
    * How long to delay before showing the splash screen.
@@ -59,17 +120,17 @@ export interface WSSplashScreenShowOptions {
   delay?: WSSplashScreenDuration;
 
   /**
-   * How long to show the splash screen before fading out
-   * when autoHide is enabled. Default is 3 seconds.
-   */
-  showDuration?: WSSplashScreenDuration;
-
-  /**
    * How long to fade in. Default is 200 ms.
    *
    * NOTE: This does NOT come into play during launch on iOS.
    */
   fadeInDuration?: WSSplashScreenDuration;
+
+  /**
+   * How long to show the splash screen before fading out
+   * when autoHide is enabled. Default is 3 seconds.
+   */
+  showDuration?: WSSplashScreenDuration;
 
   /**
    * How long to fade out. Default is 200 ms.
@@ -120,34 +181,12 @@ export interface WSSplashScreenShowOptions {
   /**
    * The mode used to place and scale an image splash screen.
    * Ignored for storyboard-based splash screens. Valid values are:
-   *
-   * fill - Scale the image to fill, not keeping the aspect ratio.
-   *
-   * aspectFill - Scale the image to fill, keeping the aspect ratio. Portions
-   *   of the image may be offscreen as a result.
-   *
-   * fit - Scale and center the image, keeping the aspect ratio, such that it
-   *   fills either the width or height of the containing view.
-   *
-   * center/top/bottom/left/right/topLeft/topRight/bottomLeft/bottomRight -
-   *   Place the image in the given location without scaling.
    */
   iosImageDisplayMode?: WSSplashScreenIosImageDisplayMode;
 
   /**
    * The mode used to place and scale an image splash screen.
-   * Ignored for layout-based splash screens. Valid values are:
-   *
-   * fill - Scale the image to fill, not keeping the aspect ratio.
-   *
-   * aspectFill - Scale the image to fill, keeping the aspect ratio.
-   *   Portions of the image may be offscreen as a result.
-   *
-   * fit - Scale and center the image, keeping the aspect ratio, such that it
-   *   fills either the width or height of the containing view.
-   *
-   * fitTop/fitBottom - (Android only) Same as fit, but place the image
-   *   at the top or bottom of the screen.
+   * Ignored for layout-based splash screens.
    */
   androidImageDisplayMode?: WSSplashScreenAndroidImageDisplayMode;
 
@@ -155,6 +194,16 @@ export interface WSSplashScreenShowOptions {
    * If true, the splash will cover the status bar on Android.
    */
   androidFullscreen?: boolean;
+
+  /**
+   * iOS options may be placed in a subobject.
+   */
+  ios?: WSSplashScreenIosShowOptions;
+
+  /**
+   * Android options may be placed in a subobject.
+   */
+  android?: WSSplashScreenAndroidShowOptions;
 }
 
 export interface WSSplashScreenHideOptions {
@@ -188,9 +237,12 @@ export interface WSSplashScreenAppStateOptions {
   onResume?: () => void;
 }
 
+/**
+ * If a plugin call is rejected, the error code will be one of these.
+ */
 export enum WSSplashScreenErrorType {
-  noSplashScreen,
-  animateMethodNotFound,
+  noSplashScreen = 'noSplashScreen',
+  animateMethodNotFound = 'animateMethodNotFound',
 }
 
 export interface WSSplashScreenPlugin {

@@ -9,14 +9,8 @@ public class WSSplashScreen extends Plugin {
     @Override
     public void load() {
         config = Config.getInstance(this);
-        int showDuration = config.getInt("showDuration", null, Splash.DEFAULT_SHOW_DURATION);
-
-        if (showDuration == 0) {
-            Logger.info("showDuration = 0, splash screen disabled");
-        } else {
-            // TODO setLogLevel()
-            Splash.showOnLaunch(this, config);
-        }
+        // TODO setLogLevel()
+        Splash.showOnLaunch(this, config);
     }
 
     public Config getConfig() {

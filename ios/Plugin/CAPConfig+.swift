@@ -8,46 +8,32 @@
 import Foundation
 import Capacitor
 
-private let kIosConfigPrefix = "ios"
-private let kAndroidConfigPrefix = "android"
-
 extension CAPConfig {
   /*
-   * Get a single value from the given dict, or from the global config if nil.
+   * Get a single value from the given dict.
    */
-  private func getValue(forKey key: String, inDict dict: [String: Any]? = nil) -> Any? {
-    var value: Any?
-
-    // Try the key as is first. If dict is not nil, check the dict. Otherwise check the top level config.
-    if dict != nil {
-      value = dict?[key]
-    } else {
-      value = getValue(key)
-    }
-
-    // If the key exists, return its value
-    if value != nil {
+  private func getValue(forKey key: String, inDict dict: [String: Any]) -> Any? {
+    // If the key exists at the top level of dict, return its value.
+    if let value = dict[key] {
       return value
     }
 
-    // If the key does not exist and begins with "ios" or "android", try the prefix and see if it's a dict
-    for prefix in [kIosConfigPrefix, kAndroidConfigPrefix] {
-      guard key.hasPrefix(prefix) else {
-        continue
-      }
+    // If the key does not exist and begins with "ios", try the prefix and see if it's a dict.
+    // If it doesn't exist or isn't a dict, the search fails.
+    let prefix = "ios"
 
-      // Try to get the prefix as an object
-      guard let config = dict?[prefix] as? [String: Any] else {
-        return nil
-      }
+    guard key.hasPrefix(prefix),
+          key.count > prefix.count,
+          let platformDict = dict[prefix] as? [String: Any] else {
+      return nil
+    }
 
-      // If it is a dict, see if the suffix exists in it
-      var suffix = key.dropFirst(prefix.count)
-      suffix = suffix.prefix(1).lowercased() + suffix.dropFirst(1)
+    // If it is a dict, see if the suffix exists in it
+    var suffix = key.dropFirst(prefix.count)
+    suffix = suffix.prefix(1).lowercased() + suffix.dropFirst(1)
 
-      if let value = config[String(suffix)] {
-        return value
-      }
+    if let value = platformDict[String(suffix)] {
+      return value
     }
 
     return nil
@@ -72,26 +58,33 @@ extension CAPConfig {
    *   }
    * }
    */
-  public func getConfigValue<T>(withKeyPath keyPath: String, ofType: T.Type) -> T? {
+  public func getConfigValue(withKeyPath keyPath: String) -> Any? {
     // Currently CAPConfig.getValue() is broken, it doesn't properly parse dotted key paths.
     // So split the keyPath, and get the first key in the path. We can traverse from there.
+    //
+    // TODO: When the bug in CAPConfig.getConfigObjectDeepest() is fixed, I won't have to traverse myself.
+
     let keys = keyPath.split(separator: ".")
 
-    guard let key = keys.first,
-          let value = getValue(forKey: String(key)) else {
+    guard let firstKey = keys.first else {
       return nil
     }
 
-    // If the value is an object and there is more than one key in the path, keep traversing.
-    // Otherwise return the value.
+    // Try to get the first key as is. If it doesn't exist the search fails.
+    guard let value = getValue(String(firstKey)) else {
+      return nil
+    }
+
+    // If the value of the first key is an object and there is more than one key in the path,
+    // keep traversing. Otherwise return the value.
     guard var dict = value as? [String: Any],
           keys.count > 1 else {
-      return value as? T
+      return value
     }
 
     // All of the keys after the first and up to the last should be dictionaries
     for key in keys[1..<keys.count - 1] {
-      if let value = getValue(forKey: String(key), inDict: dict) as? [String: Any] {
+      if let value = dict[String(key)] as? [String: Any] {
         dict = value
       } else {
         return nil
@@ -101,85 +94,52 @@ extension CAPConfig {
     // At this point the last key in keys should be in dict
     if let key = keys.last,
        let value = getValue(forKey: String(key), inDict: dict) {
-      return value as? T
-    }
-
-    /*
-      TODO: Use this code when the bug in CAPConfig.getConfigObjectDeepest() is fixed
-
-    // Try the key path as is
-    if let value = getValue(keyPath) as? T {
       return value
     }
-
-    // If the key path does not exist and the last segment of the path begins with "ios" or "android",
-    // split the last segment and try again.
-    var keys = keyPath.split(separator: ".")
-
-    if let lastKey = keys.last {
-      for prefix in [kIosConfigPrefix, kAndroidConfigPrefix] {
-        guard lastKey.hasPrefix(prefix) else {
-          continue
-        }
-
-        var suffix = lastKey.dropFirst(prefix.count)
-        suffix = suffix.prefix(1).lowercased() + suffix.dropFirst(1)
-        keys[keys.count - 1] = prefix + "." + suffix
-        let newKeyPath = keys.joined(separator: ".")
-
-        if let value = getValue(newKeyPath) as? T {
-          return value
-        }
-      }
-    }
- */
 
     return nil
   }
 
   public func getConfigString(withKeyPath keyPath: String) -> String? {
-    return getConfigValue(withKeyPath: keyPath, ofType: String.self)
+    return getConfigValue(withKeyPath: keyPath) as? String
   }
 
   public func getConfigInt(withKeyPath keyPath: String) -> Int? {
-    return getConfigValue(withKeyPath: keyPath, ofType: Int.self)
+    return getConfigValue(withKeyPath: keyPath) as? Int
   }
 
   public func getConfigDouble(withKeyPath keyPath: String) -> Double? {
-    return getConfigValue(withKeyPath: keyPath, ofType: Double.self)
+    return getConfigValue(withKeyPath: keyPath) as? Double
   }
 
   public func getConfigBool(withKeyPath keyPath: String) -> Bool? {
-    return getConfigValue(withKeyPath: keyPath, ofType: Bool.self)
+    return getConfigValue(withKeyPath: keyPath) as? Bool
   }
 
   /*
    * Get a value from a plugin call, falling back to the global config.
    */
-  public func getConfigValue<T>(
-    withKeyPath key: String,
-    pluginCall call: CAPPluginCall?,
-    ofType: T.Type) -> T? {
-    if let result = call?.get(key, T.self) {
+  public func getConfigValue(withKeyPath key: String, pluginCall call: CAPPluginCall?) -> Any? {
+    if let result = call?.getOption(key) {
       return result
     }
 
-    return getConfigValue(withKeyPath: key, ofType: T.self)
+    return getConfigValue(withKeyPath: key)
   }
 
   public func getConfigString(withKeyPath keyPath: String, pluginCall call: CAPPluginCall?) -> String? {
-    return getConfigValue(withKeyPath: keyPath, pluginCall: call, ofType: String.self)
+    return getConfigValue(withKeyPath: keyPath, pluginCall: call) as? String
   }
 
   public func getConfigInt(withKeyPath keyPath: String, pluginCall call: CAPPluginCall?) -> Int? {
-    return getConfigValue(withKeyPath: keyPath, pluginCall: call, ofType: Int.self)
+    return getConfigValue(withKeyPath: keyPath, pluginCall: call) as? Int
   }
 
   public func getConfigDouble(withKeyPath keyPath: String, pluginCall call: CAPPluginCall?) -> Double? {
-    return getConfigValue(withKeyPath: keyPath, pluginCall: call, ofType: Double.self)
+    return getConfigValue(withKeyPath: keyPath, pluginCall: call) as? Double
   }
 
   public func getConfigBool(withKeyPath keyPath: String, pluginCall call: CAPPluginCall?) -> Bool? {
-    return getConfigValue(withKeyPath: keyPath, pluginCall: call, ofType: Bool.self)
+    return getConfigValue(withKeyPath: keyPath, pluginCall: call) as? Bool
   }
 }

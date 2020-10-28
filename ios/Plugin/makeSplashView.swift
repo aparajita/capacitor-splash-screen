@@ -17,8 +17,8 @@ extension WSSplashScreen {
     // Allow the default legacy behavior of using a resource called "Splash".
     var resource = "Splash"
 
-    // See if a resource was specified in the call or the config. This takes precedence.
-    if let resourceName = getConfigString(withKeyPath: "resource", pluginCall: pluginCall) {
+    // See if a source was specified in the call or the config. This takes precedence.
+    if let resourceName = getConfigString(withKeyPath: "source", pluginCall: pluginCall) {
       resource = resourceName
     }
 
