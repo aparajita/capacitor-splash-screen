@@ -26,12 +26,12 @@ export class WSSplashScreenWeb
     });
   }
 
-  static listenToAppState(listen: false): Promise<void>;
+  static listenToAppState(listen: false): void;
 
   static listenToAppState(
     listen: true,
     options: WSSplashScreenAppStateOptions,
-  ): Promise<void>;
+  ): void;
 
   static listenToAppState(
     listen: boolean,
@@ -53,8 +53,31 @@ export class WSSplashScreenWeb
         }
       });
     }
+  }
 
-    return Promise.resolve();
+  static hideOnAppLoaded(options?: WSSplashScreenHideOptions) {
+    const splashscreen = Plugins.WSSplashScreen as WSSplashScreenWeb;
+    this.onAppLoaded(splashscreen.hide, options);
+  }
+
+  static animateOnAppLoaded(options?: WSSplashScreenAnimateOptions) {
+    const splashscreen = Plugins.WSSplashScreen as WSSplashScreenWeb;
+    this.onAppLoaded(splashscreen.animate, options);
+  }
+
+  private static onAppLoaded(
+    action: (
+      options?: WSSplashScreenShowOptions | WSSplashScreenAnimateOptions,
+    ) => void,
+    options?: WSSplashScreenShowOptions | WSSplashScreenAnimateOptions,
+  ) {
+    document.addEventListener('DOMContentLoaded', async () => {
+      try {
+        await action(options);
+      } catch (e) {
+        console.error(e.message);
+      }
+    });
   }
 
   show(_options?: WSSplashScreenShowOptions): Promise<void> {
