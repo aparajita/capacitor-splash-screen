@@ -13,6 +13,7 @@ public class WSSplashScreen extends Plugin {
     public void load() {
         config = Config.getInstance(this);
         logger.setLogLevel(Logger.LogLevel.info);
+        Splash.init(this);
         Splash.showOnLaunch(this, config);
     }
 

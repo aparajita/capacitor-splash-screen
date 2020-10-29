@@ -71,7 +71,11 @@ extension WSSplashScreen {
        * we leave the splashView alpha at 1, and then iOS performs a short cross dissolve
        * between the iOS launch screen and the splashView, which is invisible if they are identical.
        */
-      splashView.alpha = options.isLaunchSplash ? 1 : 0
+      if options.isLaunchSplash {
+        splashView.alpha = 1
+      } else {
+        splashView.alpha = CGFloat(self.getConfigDouble(withKeyPath: "startAlpha", pluginCall: call) ?? 0.0)
+      }
 
       // Now add the splash to the container view
       view.addSubview(splashView)
@@ -99,6 +103,8 @@ extension WSSplashScreen {
         call?.success()
       }
     }
+
+    callBeforeShowHook(withCall: call)
 
     UIView.animate(
       withDuration: options.fadeInDuration,

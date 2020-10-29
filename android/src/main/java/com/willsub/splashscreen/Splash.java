@@ -29,15 +29,22 @@ import java.util.HashMap;
  */
 public class Splash {
 
+    enum HookEventType {
+        beforeShow,
+        afterShow,
+        animate
+    }
+
     private static final Double DEFAULT_FADE_IN_DURATION = 200.0;
+
     private static final Double DEFAULT_FADE_OUT_DURATION = 200.0;
     private static final Double DEFAULT_SHOW_DURATION = 3000.0;
     private static final Boolean DEFAULT_AUTO_HIDE = false;
     private static final Boolean DEFAULT_ANIMATED = false;
     private static final Boolean DEFAULT_SHOW_SPINNER = false;
     private static final Boolean DEFAULT_FULLSCREEN_MODE = false;
-
     private static final String SOURCE_OPTION = "source";
+
     private static final String DELAY_OPTION = "delay";
     private static final String FADE_IN_OPTION = "fadeInDuration";
     private static final String DURATION_OPTION = "showDuration";
@@ -51,23 +58,27 @@ public class Splash {
     private static final String SPINNER_STYLE_OPTION = "androidSpinnerStyle";
     private static final String FULLSCREEN_OPTION = "androidFullscreen";
     private static final String IMAGE_MODE_OPTION = "androidImageDisplayMode";
-
     private static final Logger logger = new Logger();
+
     private static final String logTag = "Splash";
     private static final HashMap<String, ImageView.ScaleType> displayModeMap;
     private static final HashMap<String, Integer> spinnerStyleMap;
 
     // This is not a leak, because we don't want to release this view
+
     @SuppressLint("StaticFieldLeak")
     private static View splashView;
 
     private static Drawable splashImage;
 
     // This is not a leak, because we will release this view
+
     @SuppressLint("StaticFieldLeak")
     private static ProgressBar spinner;
 
     private static Plugin plugin;
+
+    private static Method eventHandler;
     private static WindowManager wm;
     private static ShowOptions showOptions;
     private static boolean isHiding = false;
@@ -94,6 +105,15 @@ public class Splash {
         spinnerStyleMap.put("smallinverse", android.R.attr.progressBarStyleSmallInverse);
         spinnerStyleMap.put("inverse", android.R.attr.progressBarStyleInverse);
         spinnerStyleMap.put("largeinverse", android.R.attr.progressBarStyleLargeInverse);
+    }
+
+    public static void init(Plugin plugin) {
+        // See if the splash screen event handler is defined, if so we might as well cache it
+        try {
+            eventHandler = plugin.getActivity().getClass().getMethod("onSplashScreenEvent", String.class, HashMap.class);
+        } catch (NoSuchMethodException e) {
+            // ignore
+        }
     }
 
     public static void showOnLaunch(final Plugin plugin, final Config config) {
@@ -396,7 +416,7 @@ public class Splash {
     }
 
     private static void callBeforeShowHook(PluginCall call) {
-        callHook("onBeforeShowSplashScreen", plugin, call, false);
+        callHook(HookEventType.beforeShow, plugin, call);
     }
 
     private static void fadeSpinnerIn(WindowManager.LayoutParams params, ShowOptions options) {
@@ -514,37 +534,25 @@ public class Splash {
     }
 
     public static void animate(Plugin plugin, PluginCall call) {
-        callHook("animateSplashScreen", plugin, call, true);
+        callHook(HookEventType.animate, plugin, call);
     }
 
-    public static void callHook(String methodName, Plugin plugin, PluginCall call, boolean failIfNotFound) {
-        Activity activity = plugin.getActivity();
-        Method method = null;
-
-        try {
-            method = activity.getClass().getMethod(methodName, HashMap.class);
-        } catch (NoSuchMethodException e) {
-            if (failIfNotFound) {
-                call.reject(
-                    "The method " + methodName + "(Object) is not defined in the main activity class",
-                    Splash.ErrorType.HOOK_METHOD_NOT_FOUND.name()
-                );
-            } else {
-                return;
-            }
+    public static void callHook(HookEventType eventType, Plugin plugin, PluginCall call) {
+        if (eventHandler == null) {
+            return;
         }
 
+        Activity activity = plugin.getActivity();
         Handler mainHandler = new Handler(activity.getMainLooper());
         int delay = call != null ? toMilliseconds(call.getDouble(DELAY_OPTION, 0.0)) : 0;
-        Method finalMethod = method;
 
         mainHandler.postDelayed(
             () -> {
                 try {
                     HashMap<String, Object> params = makeHookParams(plugin, call);
-                    finalMethod.invoke(activity, params);
+                    eventHandler.invoke(activity, eventType.name(), params);
                 } catch (IllegalAccessException | InvocationTargetException ex) {
-                    call.reject("The call to " + methodName + "(Object) failed", ErrorType.HOOK_METHOD_FAILED.name());
+                    call.reject("The call to onSplashScreenEvent() failed", ErrorType.HOOK_METHOD_FAILED.name());
                 }
             },
             delay
@@ -572,7 +580,6 @@ public class Splash {
 
         HashMap<String, Object> params = new HashMap<>();
         params.put("plugin", plugin);
-        params.put("activity", plugin.getActivity());
         params.put("splashView", splashView);
         params.put("spinner", spinner);
 
@@ -608,7 +615,7 @@ public class Splash {
     }
 
     private static void tearDown() {
-        callBeforeTearDownHook();
+        callAfterShowHook();
 
         if (spinner != null) {
             spinner.setVisibility(View.GONE);
@@ -629,8 +636,8 @@ public class Splash {
         isVisible = false;
     }
 
-    private static void callBeforeTearDownHook() {
-        callHook("onBeforeTearDownSplashScreen", plugin, null, false);
+    private static void callAfterShowHook() {
+        callHook(HookEventType.afterShow, plugin, null);
     }
 
     public static void onPause() {

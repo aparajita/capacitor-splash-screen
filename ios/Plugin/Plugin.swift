@@ -90,6 +90,7 @@ public class WSSplashScreen: CAPPlugin {
   var imageContentMode: UIView.ContentMode = .scaleAspectFill
   var isVisible: Bool = false
   var logger = Logger()
+  var eventHandler: Selector?
 
   /*
    * Called when the plugin is loaded. Note the web view is not initialized yet,
@@ -97,6 +98,12 @@ public class WSSplashScreen: CAPPlugin {
    * appropriate splash view in the bridge view controller.
    */
   override public func load() {
+    let selector = Selector(("onSplashScreenEvent::"))
+
+    if let delegate = UIApplication.shared.delegate, delegate.responds(to: selector) {
+      eventHandler = selector
+    }
+
     showDuration = getConfigDouble(withKeyPath: "showDuration") ?? kDefaultShowDuration
 
     if showDuration == 0 {
