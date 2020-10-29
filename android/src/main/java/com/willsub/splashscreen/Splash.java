@@ -18,19 +18,17 @@ import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import androidx.annotation.NonNull;
-
+import com.getcapacitor.Plugin;
+import com.getcapacitor.PluginCall;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 
-import com.getcapacitor.Plugin;
-import com.getcapacitor.PluginCall;
-
 /**
  * A Splash Screen service for showing and hiding a splash screen in the app.
  */
-@SuppressLint("StaticFieldLeak")
 public class Splash {
+
     private static final Double DEFAULT_FADE_IN_DURATION = 200.0;
     private static final Double DEFAULT_FADE_OUT_DURATION = 200.0;
     private static final Double DEFAULT_SHOW_DURATION = 3000.0;
@@ -46,6 +44,7 @@ public class Splash {
     private static final String FADE_OUT_OPTION = "fadeOutDuration";
     private static final String AUTO_HIDE_OPTION = "autoHide";
     private static final String ANIMATED_OPTION = "animated";
+    private static final String START_ALPHA_OPTION = "startAlpha";
     private static final String BACKGROUND_OPTION = "backgroundColor";
     private static final String SHOW_SPINNER_OPTION = "showSpinner";
     private static final String SPINNER_COLOR_OPTION = "spinnerColor";
@@ -57,12 +56,21 @@ public class Splash {
     private static final String logTag = "Splash";
     private static final HashMap<String, ImageView.ScaleType> displayModeMap;
     private static final HashMap<String, Integer> spinnerStyleMap;
-    private static boolean isHiding = false;
-    private static Drawable splashImage;
+
+    // This is not a leak, because we don't want to release this view
+    @SuppressLint("StaticFieldLeak")
     private static View splashView;
+
+    private static Drawable splashImage;
+
+    // This is not a leak, because we will release this view
+    @SuppressLint("StaticFieldLeak")
     private static ProgressBar spinner;
+
+    private static Plugin plugin;
     private static WindowManager wm;
     private static ShowOptions showOptions;
+    private static boolean isHiding = false;
     private static boolean isVisible = false;
     private static boolean isFullscreen = DEFAULT_FULLSCREEN_MODE;
 
@@ -88,6 +96,49 @@ public class Splash {
         spinnerStyleMap.put("largeinverse", android.R.attr.progressBarStyleLargeInverse);
     }
 
+    public static void showOnLaunch(final Plugin plugin, final Config config) {
+        double showDuration = config.getDoubleOption(DURATION_OPTION, null, Splash.DEFAULT_SHOW_DURATION);
+
+        if (showDuration == 0) {
+            logger.info(logTag, "showDuration = 0, splash screen disabled");
+        } else {
+            ShowOptions options = new ShowOptions(plugin, null, true);
+            logger.debug(logTag, options.toString());
+            show(plugin, null, options, config);
+        }
+    }
+
+    public static void show(final Plugin plugin, final PluginCall call, final ShowOptions options, final Config config) {
+        Splash.plugin = plugin;
+        showOptions = options;
+
+        Activity activity = plugin.getActivity();
+        wm = (WindowManager) activity.getSystemService(Context.WINDOW_SERVICE);
+
+        // If the splash is in the midst of hiding, wait for that to finish
+        if (activity.isFinishing()) {
+            return;
+        }
+
+        // If the splash is already visible, return to the caller
+        if (isVisible) {
+            if (call != null) {
+                call.success();
+            }
+
+            return;
+        }
+
+        buildViews(activity, options, call, config);
+        configureSplashView(call, config);
+
+        if (splashView != null) {
+            final Animator.AnimatorListener listener = makeShowAnimationListener(activity, options, plugin, call);
+            final Handler mainHandler = new Handler(activity.getMainLooper());
+            mainHandler.post(makeRunner(activity, call, options, listener));
+        }
+    }
+
     private static int parseColor(String color) {
         // Color.parseColor() reads colors as ARGB instead of RGBA, which is the CSS standard. Brilliant!
         // So we have to move the alpha value if it exists. Also, if the color does not have a "#" prefix
@@ -107,7 +158,9 @@ public class Splash {
     }
 
     // The user may specify durations as milliseconds or seconds.
+
     // Android wants milliseconds for animation parameters, so for convenience we convert to that.
+
     private static int toMilliseconds(double value) {
         // Durations >= 20 are considered milliseconds, otherwise seconds.
         if (value >= 20) {
@@ -257,19 +310,14 @@ public class Splash {
 
         if (spinnerColor != null) {
             try {
-                int[][] states = new int[][]{
-                        new int[]{android.R.attr.state_enabled}, // enabled
-                        new int[]{-android.R.attr.state_enabled}, // disabled
-                        new int[]{-android.R.attr.state_checked}, // unchecked
-                        new int[]{android.R.attr.state_pressed}  // pressed
+                int[][] states = new int[][] {
+                    new int[] { android.R.attr.state_enabled }, // enabled
+                    new int[] { -android.R.attr.state_enabled }, // disabled
+                    new int[] { -android.R.attr.state_checked }, // unchecked
+                    new int[] { android.R.attr.state_pressed } // pressed
                 };
                 int spinnerBarColor = parseColor(spinnerColor);
-                int[] colors = new int[]{
-                        spinnerBarColor,
-                        spinnerBarColor,
-                        spinnerBarColor,
-                        spinnerBarColor
-                };
+                int[] colors = new int[] { spinnerBarColor, spinnerBarColor, spinnerBarColor, spinnerBarColor };
                 ColorStateList colorStateList = new ColorStateList(states, colors);
                 spinner.setIndeterminateTintList(colorStateList);
             } catch (IllegalArgumentException ex) {
@@ -284,8 +332,8 @@ public class Splash {
         }
 
         splashView.setFitsSystemWindows(true);
+        splashView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_STABLE);
         setBackgroundColor(config, call);
-        isFullscreen = config.getBooleanOption(FULLSCREEN_OPTION, call, DEFAULT_FULLSCREEN_MODE);
 
         if (splashView instanceof ImageView) {
             ImageView image = (ImageView) splashView;
@@ -297,61 +345,16 @@ public class Splash {
             setScaleType(image, config, call);
             startAnimation();
         }
-    }
 
-    /*
-     * Show the splash screen on launch without fading in
-     */
-    public static void showOnLaunch(final Plugin plugin, final Config config) {
-        double showDuration = config.getDoubleOption(DURATION_OPTION, null, Splash.DEFAULT_SHOW_DURATION);
-
-        if (showDuration == 0) {
-            logger.info(logTag, "showDuration = 0, splash screen disabled");
-        } else {
-            ShowOptions options = new ShowOptions(plugin, null, true);
-            logger.debug(logTag, options.toString());
-            show(plugin, null, options, config);
-        }
-    }
-
-    /*
-     * Show the splash screen
-     */
-    public static void show(final Plugin plugin, final PluginCall call, final ShowOptions options, final Config config) {
-        // Save the autoHide flag so we can check it in a hide() call
-        showOptions = options;
-
-        Activity activity = plugin.getActivity();
-        wm = (WindowManager) activity.getSystemService(Context.WINDOW_SERVICE);
-
-        // If the splash is in the midst of hiding, wait for that to finish
-        if (activity.isFinishing()) {
-            return;
-        }
-
-        // If the splash is already visible, return to the caller
-        if (isVisible) {
-            if (call != null) {
-                call.success();
-            }
-
-            return;
-        }
-
-        buildViews(activity, options, call, config);
-        configureSplashView(call, config);
-
-        if (splashView != null) {
-            final Animator.AnimatorListener listener = makeShowAnimationListener(activity, options, plugin, call);
-            final Handler mainHandler = new Handler(activity.getMainLooper());
-            mainHandler.post(makeRunner(activity, options, listener));
-        }
+        isFullscreen = config.getBooleanOption(FULLSCREEN_OPTION, call, DEFAULT_FULLSCREEN_MODE);
     }
 
     private static Runnable makeRunner(
-            final Activity activity,
-            final ShowOptions options,
-            final Animator.AnimatorListener listener) {
+        final Activity activity,
+        PluginCall call,
+        final ShowOptions options,
+        final Animator.AnimatorListener listener
+    ) {
         return () -> {
             WindowManager.LayoutParams params = new WindowManager.LayoutParams();
             params.flags = activity.getWindow().getAttributes().flags;
@@ -360,7 +363,7 @@ public class Splash {
             // Required to enable the view to actually fade
             params.format = PixelFormat.TRANSLUCENT;
 
-            if (!fadeSplashViewIn(params, activity, options, listener)) {
+            if (!fadeSplashViewIn(params, activity, call, options, listener)) {
                 return;
             }
 
@@ -370,7 +373,13 @@ public class Splash {
         };
     }
 
-    private static boolean fadeSplashViewIn(WindowManager.LayoutParams params, Activity activity, ShowOptions options, Animator.AnimatorListener listener) {
+    private static boolean fadeSplashViewIn(
+        WindowManager.LayoutParams params,
+        Activity activity,
+        PluginCall call,
+        ShowOptions options,
+        Animator.AnimatorListener listener
+    ) {
         try {
             addSplashView(activity, splashView, params);
         } catch (IllegalStateException | IllegalArgumentException ex) {
@@ -378,16 +387,16 @@ public class Splash {
             return false;
         }
 
-        splashView.setAlpha(0f);
+        splashView.setAlpha(options.startAlpha);
+        callBeforeShowHook(call);
         splashView.setVisibility(View.VISIBLE);
-
-        splashView.animate()
-                .alpha(1f)
-                .setInterpolator(new LinearInterpolator())
-                .setDuration(options.fadeInDuration)
-                .setListener(listener);
+        splashView.animate().alpha(1f).setInterpolator(new LinearInterpolator()).setDuration(options.fadeInDuration).setListener(listener);
 
         return true;
+    }
+
+    private static void callBeforeShowHook(PluginCall call) {
+        callHook("onBeforeShowSplashScreen", plugin, call, false);
     }
 
     private static void fadeSpinnerIn(WindowManager.LayoutParams params, ShowOptions options) {
@@ -398,17 +407,14 @@ public class Splash {
         spinner.setAlpha(0f);
         spinner.setVisibility(View.VISIBLE);
 
-        spinner.animate()
-                .alpha(1f)
-                .setInterpolator(new LinearInterpolator())
-                .setDuration(options.fadeInDuration);
+        spinner.animate().alpha(1f).setInterpolator(new LinearInterpolator()).setDuration(options.fadeInDuration);
     }
 
     private static Animator.AnimatorListener makeShowAnimationListener(
-            final Activity activity,
-            final ShowOptions options,
-            final Plugin plugin,
-            final PluginCall call
+        final Activity activity,
+        final ShowOptions options,
+        final Plugin plugin,
+        final PluginCall call
     ) {
         return new Animator.AnimatorListener() {
             @Override
@@ -418,30 +424,30 @@ public class Splash {
                 // If the splash is animated, return immediately after fading in
                 long delay = options.animated ? 0 : options.showDuration;
 
-                new Handler().postDelayed(() -> {
-                    if (options.autoHide) {
-                        HideOptions hideOptions = new HideOptions(plugin, call);
-                        Splash.hide(activity, call, hideOptions);
-                    }
+                new Handler()
+                .postDelayed(
+                        () -> {
+                            if (options.autoHide) {
+                                HideOptions hideOptions = new HideOptions(plugin, call);
+                                Splash.hide(activity, call, hideOptions);
+                            }
 
-                    if (call != null) {
-                        call.success();
-                    }
-                }, delay);
-
+                            if (call != null) {
+                                call.success();
+                            }
+                        },
+                        delay
+                    );
             }
 
             @Override
-            public void onAnimationCancel(Animator animator) {
-            }
+            public void onAnimationCancel(Animator animator) {}
 
             @Override
-            public void onAnimationRepeat(Animator animator) {
-            }
+            public void onAnimationRepeat(Animator animator) {}
 
             @Override
-            public void onAnimationStart(Animator animator) {
-            }
+            public void onAnimationStart(Animator animator) {}
         };
     }
 
@@ -482,34 +488,72 @@ public class Splash {
             }
 
             @Override
-            public void onAnimationStart(Animator animator) {
-            }
+            public void onAnimationStart(Animator animator) {}
 
             @Override
-            public void onAnimationRepeat(Animator animator) {
-            }
+            public void onAnimationRepeat(Animator animator) {}
         };
 
         Handler mainHandler = new Handler(context.getMainLooper());
 
-        mainHandler.postDelayed(() -> {
-            if (spinner != null) {
-                spinner.animate()
-                        .alpha(0)
-                        .setInterpolator(new LinearInterpolator())
-                        .setDuration(options.fadeOutDuration);
-            }
+        mainHandler.postDelayed(
+            () -> {
+                if (spinner != null) {
+                    spinner.animate().alpha(0).setInterpolator(new LinearInterpolator()).setDuration(options.fadeOutDuration);
+                }
 
-            splashView.animate()
+                splashView
+                    .animate()
                     .alpha(0)
                     .setInterpolator(new LinearInterpolator())
                     .setDuration(options.fadeOutDuration)
                     .setListener(listener);
-        }, options.delay);
+            },
+            options.delay
+        );
     }
 
-    public static void animate(Activity activity, Plugin plugin, PluginCall call) {
+    public static void animate(Plugin plugin, PluginCall call) {
+        callHook("animateSplashScreen", plugin, call, true);
+    }
+
+    public static void callHook(String methodName, Plugin plugin, PluginCall call, boolean failIfNotFound) {
+        Activity activity = plugin.getActivity();
+        Method method = null;
+
+        try {
+            method = activity.getClass().getMethod(methodName, HashMap.class);
+        } catch (NoSuchMethodException e) {
+            if (failIfNotFound) {
+                call.reject(
+                    "The method " + methodName + "(Object) is not defined in the main activity class",
+                    Splash.ErrorType.HOOK_METHOD_NOT_FOUND.name()
+                );
+            } else {
+                return;
+            }
+        }
+
+        Handler mainHandler = new Handler(activity.getMainLooper());
+        int delay = call != null ? toMilliseconds(call.getDouble(DELAY_OPTION, 0.0)) : 0;
+        Method finalMethod = method;
+
+        mainHandler.postDelayed(
+            () -> {
+                try {
+                    HashMap<String, Object> params = makeHookParams(plugin, call);
+                    finalMethod.invoke(activity, params);
+                } catch (IllegalAccessException | InvocationTargetException ex) {
+                    call.reject("The call to " + methodName + "(Object) failed", ErrorType.HOOK_METHOD_FAILED.name());
+                }
+            },
+            delay
+        );
+    }
+
+    private static HashMap<String, Object> makeHookParams(Plugin plugin, PluginCall call) {
         class Resolver implements Runnable {
+
             final PluginCall call;
 
             Resolver(PluginCall call) {
@@ -526,29 +570,18 @@ public class Splash {
             }
         }
 
-        Handler mainHandler = new Handler(activity.getMainLooper());
-        int delay = toMilliseconds(call.getDouble(DELAY_OPTION, 0.0));
+        HashMap<String, Object> params = new HashMap<>();
+        params.put("plugin", plugin);
+        params.put("activity", plugin.getActivity());
+        params.put("splashView", splashView);
+        params.put("spinner", spinner);
 
-        mainHandler.postDelayed(() -> {
-            try {
-                Method method = activity.getClass().getMethod("animateSplashScreen", HashMap.class);
-                HashMap<String, Object> params = new HashMap<>();
-                params.put("plugin", plugin);
-                params.put("splashView", splashView);
-                params.put("spinner", spinner);
-                params.put("options", call.getData());
-                params.put("resolve", new Resolver(call));
-                method.invoke(activity, params);
+        if (call != null) {
+            params.put("options", call.getData());
+            params.put("resolve", new Resolver(call));
+        }
 
-            } catch (NoSuchMethodException ex) {
-                call.reject("The method animateSplashScreen(Object) is not defined in the main activity class",
-                        Splash.ErrorType.ANIMATE_METHOD_NOT_FOUND.name());
-
-            } catch (IllegalAccessException | InvocationTargetException ex) {
-                call.reject("The call to animateSplashScreen(Object) failed",
-                        Splash.ErrorType.ANIMATE_METHOD_NOT_FOUND.name());
-            }
-        }, delay);
+        return params;
     }
 
     private static void addSplashView(Activity activity, View view, ViewGroup.LayoutParams params) {
@@ -575,12 +608,16 @@ public class Splash {
     }
 
     private static void tearDown() {
+        callBeforeTearDownHook();
+
         if (spinner != null) {
             spinner.setVisibility(View.GONE);
 
             if (showOptions.showSpinner) {
                 wm.removeView(spinner);
             }
+
+            spinner = null;
         }
 
         if (splashView != null) {
@@ -590,6 +627,10 @@ public class Splash {
 
         isHiding = false;
         isVisible = false;
+    }
+
+    private static void callBeforeTearDownHook() {
+        callHook("onBeforeTearDownSplashScreen", plugin, null, false);
     }
 
     public static void onPause() {
@@ -610,8 +651,8 @@ public class Splash {
 
     public enum ErrorType {
         NO_SPLASH("noSplash"),
-        ANIMATE_METHOD_NOT_FOUND("animateMethodNotFound"),
-        ANIMATE_METHOD_FAILED("animateMethodFailed");
+        HOOK_METHOD_NOT_FOUND("hookMethodNotFound"),
+        HOOK_METHOD_FAILED("animateMethodFailed");
 
         private final String code;
 
@@ -624,9 +665,7 @@ public class Splash {
         }
     }
 
-    public interface Completion {
-
-    }
+    public interface Completion {}
 
     public interface SplashListener {
         void completed();
@@ -635,8 +674,10 @@ public class Splash {
     }
 
     public static class ShowOptions {
-        public int showDuration;
+
+        public float startAlpha;
         public int fadeInDuration;
+        public int showDuration;
         public int fadeOutDuration;
         public boolean autoHide;
         public String backgroundColor;
@@ -646,8 +687,9 @@ public class Splash {
 
         public ShowOptions(Plugin plugin, PluginCall call, Boolean isLaunchSplash) {
             Config config = Config.getInstance(plugin);
-            showDuration = toMilliseconds(config.getDoubleOption(DURATION_OPTION, call, DEFAULT_SHOW_DURATION));
+            startAlpha = config.getFloatOption(START_ALPHA_OPTION, call, 0f);
             fadeInDuration = toMilliseconds(config.getDoubleOption(FADE_IN_OPTION, call, DEFAULT_FADE_IN_DURATION));
+            showDuration = toMilliseconds(config.getDoubleOption(DURATION_OPTION, call, DEFAULT_SHOW_DURATION));
             fadeOutDuration = toMilliseconds(config.getDoubleOption(FADE_OUT_OPTION, call, DEFAULT_FADE_OUT_DURATION));
             backgroundColor = config.getStringOption(BACKGROUND_OPTION, call);
             animated = config.getBooleanOption(ANIMATED_OPTION, call, DEFAULT_ANIMATED);
@@ -668,19 +710,21 @@ public class Splash {
         @Override
         public String toString() {
             return String.format(
-                    "ShowOptions {\nshowDuration = %d,\nfadeInDuration = %d,\nfadeOutDuration = %d,\nbackgroundColor = %s,\nanimated = %b,\nautoHide = %b,\nshowSpinner = %b,\nisLaunchSplash = %b }",
-                    showDuration,
-                    fadeInDuration,
-                    fadeOutDuration,
-                    backgroundColor,
-                    animated,
-                    autoHide,
-                    showSpinner,
-                    isLaunchSplash);
+                "ShowOptions {\nshowDuration = %d,\nfadeInDuration = %d,\nfadeOutDuration = %d,\nbackgroundColor = %s,\nanimated = %b,\nautoHide = %b,\nshowSpinner = %b,\nisLaunchSplash = %b }",
+                showDuration,
+                fadeInDuration,
+                fadeOutDuration,
+                backgroundColor,
+                animated,
+                autoHide,
+                showSpinner,
+                isLaunchSplash
+            );
         }
     }
 
     public static class HideOptions {
+
         public int delay;
         public int fadeOutDuration;
 

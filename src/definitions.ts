@@ -151,6 +151,16 @@ export interface WSSplashScreenShowOptions {
   animated?: boolean;
 
   /**
+   * The starting alpha value of the splash screen, from 0.0 (transparent)
+   * to 1.0 (opaque). If your app has a system launch screen which you are
+   * using as the splash screen by setting the source option to "*",
+   * you will usually want to set this to 1.0 so there is no visible
+   * transition from the system launch screen to your (identical) splash screen.
+   * The default is 0.0.
+   */
+  startAlpha?: number;
+
+  /**
    * The background color to apply to the splash screen view.
    * It may be in RGB (6 case-insensitive hex digits) or RGBA
    * (8 case-insensitive hex digits) format, with or without
