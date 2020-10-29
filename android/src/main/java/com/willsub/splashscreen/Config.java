@@ -4,7 +4,6 @@ import com.getcapacitor.CapConfig;
 import com.getcapacitor.JSObject;
 import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginCall;
-
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -14,6 +13,7 @@ import org.json.JSONObject;
  */
 @SuppressWarnings("ALL")
 public class Config {
+
     static final String PLATFORM_CONFIG_PREFIX = "android";
 
     private static Config instance = null;
@@ -82,8 +82,8 @@ public class Config {
             final String prefix = PLATFORM_CONFIG_PREFIX;
             int len = prefix.length();
 
-            if (key.startsWith(prefix) && key.length() > prefix.length() && value instanceof JSONObject) {
-                JSONObject platformObject = ((JSONObject) value).getJSONObject(prefix);
+            if (key.startsWith(prefix) && key.length() > prefix.length() && object instanceof JSONObject) {
+                JSONObject platformObject = ((JSONObject) object).getJSONObject(prefix);
 
                 if (platformObject != null) {
                     String firstLetter = key.substring(len, len + 1).toLowerCase();
@@ -145,9 +145,18 @@ public class Config {
             }
         }
 
-        if (type == Double.class || type == Float.class) {
+        if (type == Double.class) {
             try {
                 return (Double) object.getDouble(key);
+            } catch (JSONException e) {
+                return null;
+            }
+        }
+
+        if (type == Float.class) {
+            try {
+                Double result = object.getDouble(key);
+                return (Float) result.floatValue();
             } catch (JSONException e) {
                 return null;
             }
