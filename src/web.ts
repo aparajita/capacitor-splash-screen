@@ -68,12 +68,29 @@ export class WSSplashScreenWeb
   private static onAppLoaded(
     action: (
       options?: WSSplashScreenShowOptions | WSSplashScreenAnimateOptions,
-    ) => void,
+    ) => Promise<void>,
     options?: WSSplashScreenShowOptions | WSSplashScreenAnimateOptions,
   ) {
-    document.addEventListener('DOMContentLoaded', async () => {
+    window.addEventListener('load', () => {
       try {
-        await action(options);
+        /*
+          The native code *could* handle the delay, but stupid Android
+          chokes if a native animation is running when the web view is first drawing.
+          So we run the delay in the web view thread before running the animation
+          to ensure the animation can run smoothly.
+         */
+        let delay = 0;
+
+        if (typeof options?.delay === 'number') {
+          delay = options.delay;
+        }
+
+        // We have consumed the delay, don't pass it to the native code
+        delete options.delay;
+
+        setTimeout(async () => {
+          await action(options);
+        }, delay * 1000);
       } catch (e) {
         console.error(e.message);
       }
