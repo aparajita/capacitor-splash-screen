@@ -1,5 +1,5 @@
 {
-  "name": "@willsub/capacitor-splashscreen",
+  "name": "ws-capacitor-splashscreen",
   "version": "1.0.0",
   "description": "Provides access to the native biometric auth APIs for Capacitor apps",
   "main": "dist/esm/index.js",
