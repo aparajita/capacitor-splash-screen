@@ -1,10 +1,10 @@
 package com.willsub.splashscreen;
 
 import android.util.Log;
-
 import java.util.HashMap;
 
 public class Logger {
+
     enum LogLevel {
         off,
         error,

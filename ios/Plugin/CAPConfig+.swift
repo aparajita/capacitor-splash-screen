@@ -62,7 +62,7 @@ extension CAPConfig {
     // Currently CAPConfig.getValue() is broken, it doesn't properly parse dotted key paths.
     // So split the keyPath, and get the first key in the path. We can traverse from there.
     //
-    // TODO: When the bug in CAPConfig.getConfigObjectDeepest() is fixed, I won't have to traverse myself.
+    // NOTE: When the bug in CAPConfig.getConfigObjectDeepest() is fixed, I won't have to traverse myself.
 
     let keys = keyPath.split(separator: ".")
 

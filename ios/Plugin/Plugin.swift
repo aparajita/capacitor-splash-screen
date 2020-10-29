@@ -60,7 +60,7 @@ public class WSSplashScreen: CAPPlugin {
       } else {
         autoHide = plugin.getConfigBool(withKeyPath: "autoHide", pluginCall: call) ?? kDefaultAutoHide
       }
-      
+
       showSpinner = plugin.getConfigBool(withKeyPath: "showSpinner", pluginCall: call) ?? false
       self.isLaunchSplash = isLaunchSplash
     }

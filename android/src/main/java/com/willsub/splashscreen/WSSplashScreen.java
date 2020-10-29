@@ -2,8 +2,9 @@ package com.willsub.splashscreen;
 
 import com.getcapacitor.*;
 
-@NativePlugin()
+@NativePlugin
 public class WSSplashScreen extends Plugin {
+
     private Config config;
     private final Logger logger = new Logger();
     private final String tag = getLogTag();
@@ -19,14 +20,14 @@ public class WSSplashScreen extends Plugin {
         return config;
     }
 
-    @PluginMethod()
+    @PluginMethod
     public void show(final PluginCall call) {
         Splash.ShowOptions options = new Splash.ShowOptions(this, call, false);
         logger.debug(tag, options.toString());
         Splash.show(this, call, options, config);
     }
 
-    @PluginMethod()
+    @PluginMethod
     public void hide(PluginCall call) {
         // If autoHide is on, don't do anything
         if (!Splash.getAutoHide()) {
@@ -35,8 +36,8 @@ public class WSSplashScreen extends Plugin {
         }
     }
 
-    @PluginMethod()
+    @PluginMethod
     public void animate(PluginCall call) {
-        Splash.animate(getActivity(), this, call);
+        Splash.animate(this, call);
     }
 }
