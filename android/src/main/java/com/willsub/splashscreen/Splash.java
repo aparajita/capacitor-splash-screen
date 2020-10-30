@@ -352,6 +352,8 @@ public class Splash {
         }
 
         splashView.setFitsSystemWindows(true);
+
+        // Make sure the splash does not move if the status bar appears/disappears
         splashView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_STABLE);
         setBackgroundColor(config, call);
 
@@ -423,8 +425,11 @@ public class Splash {
         params.height = WindowManager.LayoutParams.WRAP_CONTENT;
         params.width = WindowManager.LayoutParams.WRAP_CONTENT;
 
+        // We add the spinner to the window manager because otherwise it won't be centered
+        // unless we make Herculean efforts to figure out the type of content view container
+        // and place it accordingly. No thanks! Use a layout with a spinner, that's much better.
         wm.addView(spinner, params);
-        spinner.setAlpha(0f);
+        spinner.setAlpha(options.startAlpha);
         spinner.setVisibility(View.VISIBLE);
 
         spinner.animate().alpha(1f).setInterpolator(new LinearInterpolator()).setDuration(options.fadeInDuration);
