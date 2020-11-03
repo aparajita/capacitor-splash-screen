@@ -45,7 +45,9 @@
   "keywords": [
     "capacitor",
     "plugin",
-    "native"
+    "native",
+    "splash",
+    "launch"
   ],
   "capacitor": {
     "ios": {
@@ -59,9 +61,9 @@
   "swiftlint": "@ionic/swiftlint-config",
   "repository": {
     "type": "git",
-    "url": "https://github.com/willsub/capacitor-splashscreen.git"
+    "url": "https://github.com/willsub/ws-capacitor-splashscreen.git"
   },
   "bugs": {
-    "url": "https://github.com/willsub/capacitor-splashscreen.git/issues"
+    "url": "https://github.com/willsub/ws-capacitor-splashscreen.git/issues"
   }
 }
