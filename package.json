@@ -14,7 +14,7 @@
     "swiftlint.fix": "node-swiftlint autocorrect",
     "build": "npm run clean && tsc && rollup -c rollup.config.js",
     "clean": "rimraf ./dist",
-    "watch": "nodemon -w ./src -w tsconfig.json -w rollup.config.js --exec 'pnpm build' -e ts"
+    "watch": "nodemon -w ./src -w tsconfig.json -w rollup.config.js --exec 'npm run build --silent' -e ts"
   },
   "author": "Aparajita Fishman",
   "license": "MIT",
