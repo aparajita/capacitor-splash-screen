@@ -36,6 +36,19 @@ export type WSSplashScreenIosImageDisplayMode =
   | 'bottomRight';
 
 /**
+ * Possible Android spinner styles. For more information,
+ * see https://developer.android.com/reference/android/R.attr.html#progressBarStyle
+ */
+export type WSSplashScreenAndroidSpinnerStyle =
+  | 'small'
+  | 'smallInverse'
+  | 'medium'
+  | 'mediumInverse'
+  | 'large'
+  | 'largeInverse'
+  | 'horizontal';
+
+/**
  * The mode used to place and scale an image splash screen.
  * Ignored for layout-based splash screens. Valid values are:
  *
