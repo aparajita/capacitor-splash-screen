@@ -20,37 +20,71 @@ extension UIColor {
   }
 
   convenience init?(fromHex: String) {
-    let hexString = fromHex.trimmingCharacters(in: .whitespacesAndNewlines).replacingOccurrences(
+    var hexString = fromHex.trimmingCharacters(in: .whitespacesAndNewlines).replacingOccurrences(
       of: "#",
       with: ""
     )
 
-    var argb: UInt32 = 0
+    var rgba: UInt32 = 0
 
     var red: CGFloat = 0.0
     var green: CGFloat = 0.0
     var blue: CGFloat = 0.0
     var alpha: CGFloat = 1.0
 
-    guard Scanner(string: hexString).scanHexInt32(&argb) else {
+    // Convert RGB[A] to RRGGBB[AA]
+    if hexString.count == 3 || hexString.count == 4 {
+      var rgbString = ""
+
+      hexString.forEach { char in
+        rgbString = rgbString + String(char) + String(char)
+      }
+
+      hexString = rgbString
+    }
+
+    guard Scanner(string: hexString).scanHexInt32(&rgba) else {
       return nil
     }
 
     if hexString.count == 6 {
-      red = CGFloat((argb & 0xFF0000) >> 16) / 255.0
-      green = CGFloat((argb & 0x00FF00) >> 8) / 255.0
-      blue = CGFloat(argb & 0x0000FF) / 255.0
+      // RRGGBB
+      red = CGFloat((rgba & 0xFF0000) >> 16) / 255.0
+      green = CGFloat((rgba & 0x00FF00) >> 8) / 255.0
+      blue = CGFloat(rgba & 0x0000FF) / 255.0
 
     } else if hexString.count == 8 {
-      red = CGFloat((argb & 0xFF00_0000) >> 24) / 255.0
-      green = CGFloat((argb & 0x00FF0000) >> 16) / 255.0
-      blue = CGFloat((argb & 0x0000FF00) >> 8) / 255.0
-      alpha = CGFloat(argb & 0x000000FF) / 255.0
+      // RRGGBBAA
+      red = CGFloat((rgba & 0xFF00_0000) >> 24) / 255.0
+      green = CGFloat((rgba & 0x00FF0000) >> 16) / 255.0
+      blue = CGFloat((rgba & 0x0000FF00) >> 8) / 255.0
+      alpha = CGFloat(rgba & 0x000000FF) / 255.0
 
     } else {
       return nil
     }
 
     self.init(red: red, green: green, blue: blue, alpha: alpha)
+  }
+
+  static func from(string: String) -> UIColor? {
+    switch string {
+      case "systemBackground":
+        if #available(iOS 13.0, *) {
+          return UIColor.systemBackground
+        } else {
+          return UIColor.white
+        }
+
+      case "systemText":
+        if #available(iOS 13.0, *) {
+          return UIColor.label
+        } else {
+          return UIColor.black
+        }
+
+      default:
+        return UIColor(fromHex: string)
+    }
   }
 }

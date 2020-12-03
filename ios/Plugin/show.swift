@@ -30,20 +30,15 @@ extension WSSplashScreen {
   }
 
   func showSplash(withOptions options: ShowOptions, pluginCall call: CAPPluginCall?) {
-    // If we haven't yet built the views, do it now
-    if splashView == nil {
-      buildViews(forPluginCall: call)
-    }
-
-    // Unwrap splashView, make sure we have one
-    guard let splashView = splashView else {
-      return self.noSplashAvailable(forCall: call)
-    }
-
-    showDuration = options.showDuration
-
     // We have to use the main thread to show something over the Ionic web view
     DispatchQueue.main.async {
+      self.buildViews(forPluginCall: call)
+
+      // If buildViews() failed, splashView will be nil
+      guard let splashView = self.splashView else {
+        return
+      }
+
       guard let view = self.bridge?.viewController.view else {
         return
       }
@@ -52,7 +47,7 @@ extension WSSplashScreen {
       splashView.backgroundColor = nil
 
       if let color = options.backgroundColor {
-        if let backgroundColor = self.makeUIColor(fromHex: color) {
+        if let backgroundColor = self.makeUIColor(fromString: color) {
           splashView.backgroundColor = backgroundColor
         }
       }
@@ -83,11 +78,11 @@ extension WSSplashScreen {
       // If there is a spinner, add it on top of the splash
       self.setupSpinner(inView: view, pluginCall: call)
 
-      self.fadeSplashIn(view, withOptions: options, pluginCall: call)
+      self.fadeInSplash(withOptions: options, pluginCall: call)
     }
   }
 
-  func fadeSplashIn(_ view: UIView, withOptions options: ShowOptions, pluginCall call: CAPPluginCall?) {
+  func fadeInSplash(withOptions options: ShowOptions, pluginCall call: CAPPluginCall?) {
     // swiftlint doesn't like nested trailing closures, so we define this separately
     let onAnimationEnd: (Bool) -> Void = { _ in
       self.isVisible = true
@@ -109,7 +104,7 @@ extension WSSplashScreen {
     UIView.animate(
       withDuration: options.fadeInDuration,
       delay: 0,
-      options: [.overrideInheritedOptions, .showHideTransitionViews, .curveLinear],
+      options: [.overrideInheritedOptions, .curveLinear],
       animations: {
         self.splashView?.alpha = 1
         self.spinner?.alpha = 1
@@ -167,7 +162,7 @@ extension WSSplashScreen {
     spinner.color = nil
 
     if let spinnerColor = getConfigString(withKeyPath: "spinnerColor", pluginCall: call),
-       let uiColor = makeUIColor(fromHex: spinnerColor) {
+       let uiColor = makeUIColor(fromString: spinnerColor) {
       spinner.color = uiColor
     }
 
@@ -177,12 +172,15 @@ extension WSSplashScreen {
     spinner.startAnimating()
   }
 
-  func makeUIColor(fromHex hex: String) -> UIColor? {
-    if let uiColor = UIColor(fromHex: hex) {
-      return uiColor
+  func makeUIColor(fromString string: String) -> UIColor? {
+    if !string.isEmpty {
+      if let uiColor = UIColor.from(string: string) {
+        return uiColor
+      }
+
+      logger.warn("Invalid color: \(string)")
     }
 
-    logger.warn("Invalid hex color: \(hex)")
     return nil
   }
 }

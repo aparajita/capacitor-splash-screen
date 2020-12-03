@@ -34,9 +34,9 @@ extension WSSplashScreen {
    * Clean up after the splash is hidden
    */
   func tearDown() {
-    callAfterShowHook()
     isVisible = false
     splashView?.removeFromSuperview()
     spinner?.removeFromSuperview()
+    callAfterShowHook()
   }
 }

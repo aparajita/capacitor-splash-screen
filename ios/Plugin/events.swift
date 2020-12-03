@@ -7,6 +7,8 @@
 
 import Capacitor
 
+private var animatePluginCall: CAPPluginCall?
+
 extension WSSplashScreen {
   enum EventType: String {
     case beforeShow
@@ -19,22 +21,23 @@ extension WSSplashScreen {
   }
 
   func callAfterShowHook() {
-    dispatchEvent(.afterShow, withCall: nil)
+    dispatchEvent(.afterShow)
   }
 
-  func animate(withCall call: CAPPluginCall?) {
+  func animate(withCall call: CAPPluginCall) {
+    animatePluginCall = call
     dispatchEvent(.animate, withCall: call)
   }
 
-  func dispatchEvent(_ event: EventType, withCall call: CAPPluginCall?) {
+  func dispatchEvent(_ event: EventType, withCall call: CAPPluginCall? = nil) {
     guard eventHandler != nil else {
       logger.warn("onSplashScreenEvent() was not found in the app delegate")
       return
     }
 
-    func resolve() {
+    func done() {
       tearDown()
-      call?.success()
+      animatePluginCall?.resolve()
     }
 
     DispatchQueue.main.async {
@@ -46,13 +49,16 @@ extension WSSplashScreen {
           options = call.options
         }
 
-        let params: [String: Any?] = [
+        var params: [String: Any?] = [
           "plugin": self,
           "splashView": self.splashView as Any,
           "spinner": self.spinner as Any,
-          "options": options as Any?,
-          "resolve": resolve
+          "options": options as Any?
         ]
+
+        if event == .animate {
+          params["done"] = done
+        }
 
         delegate.perform(eventHandler, with: event.rawValue, with: params)
       }

@@ -19,20 +19,21 @@ import Capacitor
 private let kDefaultFadeInDuration = 0.2
 private let kDefaultFadeOutDuration = 0.2
 private let kDefaultShowDuration = 3.0
-private let kDefaultAutoHide = true
+private let kDefaultAutoHide = false
+private let kDefaultAnimated = false
 
 /*
  * iOS animation methods usually want seconds for durations.
- * Convert milliseconds to seconds if necessary.
+ * Durations passed in are in milliseconds.
  */
 private func toSeconds(_ value: Double) -> Double {
-  // We consider any values >= 20 to be milliseconds
-  return value >= 20 ? value / 1000 : value
+  return value / 1000
 }
 
 @objc(WSSplashScreen)
 public class WSSplashScreen: CAPPlugin {
   enum ErrorType: String {
+    case notFound
     case noSplash
     case animateMethodNotFound
   }
@@ -52,7 +53,7 @@ public class WSSplashScreen: CAPPlugin {
       fadeInDuration = toSeconds(plugin.getConfigDouble(withKeyPath: "fadeInDuration", pluginCall: call) ?? kDefaultFadeInDuration)
       fadeOutDuration = toSeconds(plugin.getConfigDouble(withKeyPath: "fadeOutDuration", pluginCall: call) ?? kDefaultFadeOutDuration)
       backgroundColor = plugin.getConfigString(withKeyPath: "backgroundColor", pluginCall: call)
-      animated = plugin.getConfigBool(withKeyPath: "animated", pluginCall: call) ?? false
+      animated = plugin.getConfigBool(withKeyPath: "animated", pluginCall: call) ?? kDefaultAnimated
 
       // If the splash is marked as animated, it's up to the dev to hide the splash
       if animated {
@@ -61,7 +62,7 @@ public class WSSplashScreen: CAPPlugin {
         autoHide = plugin.getConfigBool(withKeyPath: "autoHide", pluginCall: call) ?? kDefaultAutoHide
       }
 
-      showSpinner = plugin.getConfigBool(withKeyPath: "showSpinner", pluginCall: call) ?? false
+      showSpinner = plugin.getConfigBool(withKeyPath: "showSpinner", pluginCall: call) ?? kDefaultAnimated
       self.isLaunchSplash = isLaunchSplash
     }
   }
@@ -78,14 +79,14 @@ public class WSSplashScreen: CAPPlugin {
   }
 
   struct ViewInfo {
-    var resourceName = ""
+    var source = ""
     var image: UIImage?
     var storyboard: UIStoryboard?
   }
 
+  var source = ""
   var viewInfo = ViewInfo()
   var splashView: UIView?
-  var showDuration: Double = 0
   var spinner: UIActivityIndicatorView?
   var imageContentMode: UIView.ContentMode = .scaleAspectFill
   var isVisible: Bool = false
@@ -104,10 +105,10 @@ public class WSSplashScreen: CAPPlugin {
       eventHandler = selector
     }
 
-    showDuration = getConfigDouble(withKeyPath: "showDuration") ?? kDefaultShowDuration
+    let showDuration = getConfigDouble(withKeyPath: "showDuration") ?? kDefaultShowDuration
 
     if showDuration == 0 {
-      logger.warn("showDuration = 0, splash screen disabled")
+      logger.info("showDuration = 0, splash screen disabled")
     } else {
       logger.setLogLevel(getConfigString(withKeyPath: "logLevel") ?? "info")
       showOnLaunch()
@@ -115,18 +116,18 @@ public class WSSplashScreen: CAPPlugin {
   }
 
   /*
-   * show() plugin call. Shows the splashscreen.
+   * nativeShow() plugin call. Shows the splashscreen.
    */
-  @objc public func show(_ call: CAPPluginCall) {
+  @objc public func nativeShow(_ call: CAPPluginCall) {
     let options = ShowOptions(withPlugin: self, pluginCall: call, isLaunchSplash: false)
     logger.debug("show():", options)
     showSplash(withOptions: options, pluginCall: call)
   }
 
   /*
-   * hide() plugin call. Hides the splash screen.
+   * nativeHide() plugin call. Hides the splash screen.
    */
-  @objc public func hide(_ call: CAPPluginCall) {
+  @objc public func nativeHide(_ call: CAPPluginCall) {
     guard splashView != nil else {
       return noSplashAvailable(forCall: call)
     }

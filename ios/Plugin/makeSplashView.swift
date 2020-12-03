@@ -11,38 +11,55 @@ extension WSSplashScreen {
   /*
    * Build the views used to display the splash screen.
    */
-  func buildViews(forPluginCall pluginCall: CAPPluginCall?) {
+  func buildViews(forPluginCall call: CAPPluginCall?) {
     var found = false
 
     // Allow the default legacy behavior of using a resource called "Splash".
-    var resource = "Splash"
+    var source = "Splash"
 
-    // See if a source was specified in the call or the config. This takes precedence.
-    if let resourceName = getConfigString(withKeyPath: "source", pluginCall: pluginCall) {
-      resource = resourceName
+    // See if a source was specified in the call or the config. This takes precedence
+    // over the default.
+    if let sourceOption = getConfigString(withKeyPath: "source", pluginCall: call),
+       !sourceOption.isEmpty {
+      source = sourceOption
     }
 
-    if !resource.isEmpty {
-      // If the resource name is "*", use the iOS launch screen
-      if resource == "*" {
-        found = checkForLaunchScreen()
-      } else {
-        found = checkForImage(named: resource)
+    // If the source has not changed, the splashView should already be built
+    guard source != self.source else {
+      return
+    }
 
-        if !found {
-          found = checkForStoryboard(named: resource)
-        }
+    self.source = source
+    splashView = nil
+    viewInfo = ViewInfo()
+
+    // If the source name is "*", use the iOS launch screen
+    if source == "*" {
+      found = checkForLaunchScreen()
+
+    } else {
+      found = checkForImage(named: source)
+
+      if !found {
+        found = checkForStoryboard(named: source)
+      }
+    }
+
+    if !found {
+      let message = "No image or storyboard named \"\(source)\" found"
+
+      if let call = call {
+        return call.reject(message, ErrorType.notFound.rawValue)
+      } else {
+        logger.error(message)
       }
     }
 
     if viewInfo.storyboard != nil {
-      makeStoryboardSplashView()
+      makeStoryboardSplashView(withCall: call)
 
     } else if viewInfo.image != nil {
       makeImageSplashView()
-
-    } else {
-      logger.warn("No splash image or storyboard found")
     }
 
     guard splashView != nil else {
@@ -58,7 +75,7 @@ extension WSSplashScreen {
    */
   func checkForImage(named name: String) -> Bool {
     if let image = UIImage(named: name) {
-      viewInfo.resourceName = name
+      viewInfo.source = name
       viewInfo.image = image
       return true
     }
@@ -83,7 +100,7 @@ extension WSSplashScreen {
    */
   func checkForStoryboard(named name: String) -> Bool {
     if let storyboard = Storyboard.getNamed(name) {
-      viewInfo.resourceName = name
+      viewInfo.source = name
       viewInfo.storyboard = storyboard
       return true
     }
@@ -94,15 +111,15 @@ extension WSSplashScreen {
   /*
    * Given a storyboard name, attempt to instantiate the storyboard, then clone
    * the top level view, which we will use as the splash view.
-   *
-   * WARNING! If the named storyboard does not exist, this will crash.
    */
-  func makeStoryboardSplashView() {
+  func makeStoryboardSplashView(withCall call: CAPPluginCall?) {
+    // Technically this should never be nil, but it's an optional so we have to unwrap it
     guard let storyboard = viewInfo.storyboard else {
       return
     }
 
     let viewController = storyboard.instantiateInitialViewController()
+    var error = ""
 
     if let vcView = viewController?.view {
       // Clone the view
@@ -110,13 +127,21 @@ extension WSSplashScreen {
       splashView = NSKeyedUnarchiver.unarchiveObject(with: archive) as? UIView
 
       if splashView != nil {
-        logger.info("Using storyboard \"\(viewInfo.resourceName)\"")
+        logger.info("Using storyboard \"\(viewInfo.source)\"")
       } else {
-        logger.error("Unable to clone the \"\(viewInfo.resourceName)\" storyboard view")
+        error = "Unable to clone the \"\(viewInfo.source)\" storyboard view"
       }
 
     } else {
-      logger.error("Unable to instantiate the \"\(viewInfo.resourceName)\" storyboard view controller")
+      error = "Unable to instantiate the \"\(viewInfo.source)\" storyboard view controller"
+    }
+
+    if !error.isEmpty {
+      if let call = call {
+        call.reject(error, ErrorType.noSplash.rawValue)
+      } else {
+        logger.error(error)
+      }
     }
   }
 
@@ -127,6 +152,6 @@ extension WSSplashScreen {
    */
   func makeImageSplashView() {
     splashView = UIImageView(image: viewInfo.image)
-    logger.self.info("Using image \"\(viewInfo.resourceName)\"")
+    logger.info("Using image \"\(viewInfo.source)\"")
   }
 }
