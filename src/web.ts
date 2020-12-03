@@ -5,38 +5,37 @@ import {
   registerWebPlugin,
   WebPlugin,
 } from '@capacitor/core';
+import { native } from 'ws-capacitor-native-decorator';
 import {
   WSSplashScreenAnimateOptions,
   WSSplashScreenAppStateOptions,
+  WSSplashScreenDuration,
   WSSplashScreenHideOptions,
   WSSplashScreenPlugin,
   WSSplashScreenShowOptions,
 } from './definitions';
 
+// The threshold beyond which durations are considered milliseconds
+const kDurationMsThreshold = 10;
+
 export class WSSplashScreenWeb
   extends WebPlugin
   implements WSSplashScreenPlugin {
-  private static shouldListenToAppState = false;
-  private static listening = false;
+  private shouldListenToAppState = false;
+  private listening = false;
 
   constructor() {
     super({
       name: 'WSSplashScreen',
-      platforms: ['web'],
+      platforms: ['web', 'ios', 'android'],
     });
   }
 
-  static listenToAppState(listen: false): void;
+  listenToAppState(listen: false): void;
 
-  static listenToAppState(
-    listen: true,
-    options: WSSplashScreenAppStateOptions,
-  ): void;
+  listenToAppState(listen: true, options: WSSplashScreenAppStateOptions): void;
 
-  static listenToAppState(
-    listen: boolean,
-    options?: WSSplashScreenAppStateOptions,
-  ) {
+  listenToAppState(listen: boolean, options?: WSSplashScreenAppStateOptions) {
     this.shouldListenToAppState = listen;
 
     if (listen && !this.listening) {
@@ -55,58 +54,71 @@ export class WSSplashScreenWeb
     }
   }
 
-  static hideOnAppLoaded(options?: WSSplashScreenHideOptions) {
-    const splashscreen = Plugins.WSSplashScreen as WSSplashScreenWeb;
-    this.onAppLoaded(splashscreen.hide, options);
+  show(options?: WSSplashScreenShowOptions): Promise<void> {
+    return this.showHide('show', options);
   }
 
-  static animateOnAppLoaded(options?: WSSplashScreenAnimateOptions) {
-    const splashscreen = Plugins.WSSplashScreen as WSSplashScreenWeb;
-    this.onAppLoaded(splashscreen.animate, options);
+  hide(options?: WSSplashScreenShowOptions): Promise<void> {
+    return this.showHide('hide', options);
   }
 
-  private static onAppLoaded(
-    action: (
-      options?: WSSplashScreenShowOptions | WSSplashScreenAnimateOptions,
-    ) => Promise<void>,
-    options?: WSSplashScreenShowOptions | WSSplashScreenAnimateOptions,
-  ) {
-    window.addEventListener('load', () => {
-      try {
-        /*
-          The native code *could* handle the delay, but stupid Android
-          chokes if a native animation is running when the web view is first drawing.
-          So we run the delay in the web view thread before running the animation
-          to ensure the animation can run smoothly.
-         */
-        let delay = 0;
-
-        if (typeof options?.delay === 'number') {
-          delay = options.delay;
-        }
-
-        // We have consumed the delay, don't pass it to the native code
-        delete options.delay;
-
-        setTimeout(async () => {
-          await action(options);
-        }, delay * 1000);
-      } catch (e) {
-        console.error(e.message);
-      }
-    });
-  }
-
-  show(_options?: WSSplashScreenShowOptions): Promise<void> {
-    return Promise.resolve();
-  }
-
-  hide(_options?: WSSplashScreenHideOptions): Promise<void> {
-    return Promise.resolve();
-  }
-
+  @native()
   animate(_options?: WSSplashScreenAnimateOptions): Promise<void> {
     return Promise.resolve();
+  }
+
+  @native()
+  private nativeShow(_options?: WSSplashScreenShowOptions): Promise<void> {
+    return Promise.resolve();
+  }
+
+  @native()
+  private nativeHide(_options?: WSSplashScreenHideOptions): Promise<void> {
+    return Promise.resolve();
+  }
+
+  private showHide(
+    action: 'show' | 'hide',
+    options?: WSSplashScreenShowOptions | WSSplashScreenHideOptions,
+  ): Promise<void> {
+    const method = action === 'show' ? this.nativeShow : this.nativeHide;
+    let modifiedOptions:
+      | WSSplashScreenShowOptions
+      | WSSplashScreenHideOptions = {};
+    let preDelay = this.toMilliseconds(options?.delay || 0);
+
+    if (options) {
+      // Copy the options as a generic hash so they can be modified, and remove the delay property
+      let { delay, ...opts } = options as { [key: string]: any };
+
+      // Convert durations to milliseconds
+      Object.keys(opts)
+        .filter(key => key.endsWith('Duration'))
+        .forEach(key => {
+          opts[key] = this.toMilliseconds(opts[key]);
+        });
+
+      modifiedOptions =
+        action === 'show'
+          ? (opts as WSSplashScreenShowOptions)
+          : (opts as WSSplashScreenHideOptions);
+    }
+
+    // To prevent the native plugin from blocking the main thread (I'm looking at you, Android),
+    // perform any pre-show/hide delay in the JS world.
+    if (preDelay > 0) {
+      return new Promise(resolve => {
+        setTimeout(() => {
+          method.call(this, modifiedOptions).then(() => resolve());
+        }, this.toMilliseconds(preDelay));
+      });
+    }
+
+    return method.call(this, modifiedOptions);
+  }
+
+  toMilliseconds(value: WSSplashScreenDuration): WSSplashScreenDuration {
+    return value >= kDurationMsThreshold ? value : value * 1000;
   }
 }
 
