@@ -1,3 +1,5 @@
+import { PluginResultError } from '@capacitor/core';
+
 declare module '@capacitor/core' {
   interface PluginRegistry {
     WSSplashScreen: WSSplashScreenPlugin;
@@ -56,20 +58,34 @@ export type WSSplashScreenAndroidImageDisplayMode =
   | 'fitBottom'
   | 'center';
 
+/**
+ * Possible iOS spinner styles.
+ */
 export type WSSplashScreenIosSpinnerStyle = 'small' | 'large';
 
-export type WSSplashScreenAndroidSpinnerStyle =
-  | 'small'
-  | 'large'
-  | 'horizontal'
-  | 'smallInverse'
-  | 'inverse'
-  | 'largeInverse';
+/**
+ * Colors may be one of the following named colors or a hex color.
+ * Hex colors are in CSS format: RGB, RRGGBB, or RRGGBBAA (case-insensitive)
+ * with or without a leading '#'. An empty string is transparent.
+ *
+ * iOS:
+ * 'systemBackground' is the standard system background, which adapts to dark mode
+ * (i.e. white in light mode, black in dark mode).
+ *
+ * 'systemText' is the standard system text color, which adapts to dark mode.
+ *
+ * Dark mode support began with iOS 13. On prior versions, 'systemBackground'
+ * is white and 'systemText' is black.
+ *
+ * Android:
+ * Currently, 'systemBackground' == white, 'systemText' == black
+ */
+export type WSSplashScreenColor = 'systemBackground' | 'systemText' | string;
 
 /**
  * In options objects, when you specify a duration, it can either
- * be in seconds or milliseconds. Any value >= 20 will be considered
- * milliseconds, any value < 20 will be considered seconds.
+ * be in seconds or milliseconds. Any value >= 10 will be considered
+ * milliseconds, any value < 10 will be considered seconds.
  */
 export type WSSplashScreenDuration = number;
 
@@ -106,21 +122,21 @@ export interface WSSplashScreenShowOptions {
   /**
    * The source of the splash screen. On iOS, it may be an image or
    * storyboard with the given name. On Android, it may be any drawable
-   * or layout with the given name. On iOS, the default is "Splash",
-   * on Android "splash". If the name is "*", on iOS the configured
+   * or layout with the given name. If the name is "*", on iOS the configured
    * LaunchScreen storyboard in the app's project will be used,
    * on Android the layout "launch_screen.xml" will be used if present.
+   * Default: '*'
    */
   source?: string;
 
   /**
    * How long to delay before showing the splash screen.
-   * Default is 0.
+   * Default: 0
    */
   delay?: WSSplashScreenDuration;
 
   /**
-   * How long to fade in. Default is 200 ms.
+   * How long to fade in. Default: 200 ms
    *
    * NOTE: This does NOT come into play during launch on iOS.
    */
@@ -128,25 +144,26 @@ export interface WSSplashScreenShowOptions {
 
   /**
    * How long to show the splash screen before fading out
-   * when autoHide is enabled. Default is 3 seconds.
+   * when autoHide is enabled. Default: 3 seconds
    */
   showDuration?: WSSplashScreenDuration;
 
   /**
-   * How long to fade out. Default is 200 ms.
+   * How long to fade out. Default: 200 ms
    */
   fadeOutDuration?: WSSplashScreenDuration;
 
   /**
-   * Whether to auto hide the splash after showDuration. Default is false.
-   * If false, you have to manually call hide() after your app is mounted.
+   * Whether to auto hide the splash after showDuration. If false,
+   * you have to manually call hide() after your app is mounted.
+   * Default: false
    */
   autoHide?: boolean;
 
   /**
    * Whether to let your own native code animate the splash view after
    * it is shown during launch or by calling show(). When this is true,
-   * showDuration, fadeOutDuration and autoHide are ignored. Default is false.
+   * showDuration, fadeOutDuration and autoHide are ignored. Default: false
    */
   animated?: boolean;
 
@@ -156,27 +173,25 @@ export interface WSSplashScreenShowOptions {
    * using as the splash screen by setting the source option to "*",
    * you will usually want to set this to 1.0 so there is no visible
    * transition from the system launch screen to your (identical) splash screen.
-   * The default is 0.0.
+   * Default: 0.0
    */
   startAlpha?: number;
 
   /**
    * The background color to apply to the splash screen view.
-   * It may be in RGB (6 case-insensitive hex digits) or RGBA
-   * (8 case-insensitive hex digits) format, with or without
-   * a leading '#'.
+   * Default: '' (transparent)
    */
-  backgroundColor?: string;
+  backgroundColor?: WSSplashScreenColor;
 
   /**
-   * Whether to show a spinner centered in the splash screen. Default is false.
+   * Whether to show a spinner centered in the splash screen. Default: false
    */
   showSpinner?: boolean;
 
   /**
-   * Spinner color. Color format is same as for backgroundColor.
+   * Spinner color. Default: '' (transparent)
    */
-  spinnerColor?: string;
+  spinnerColor?: WSSplashScreenColor;
 
   /**
    * The spinner size on iOS.
@@ -218,12 +233,12 @@ export interface WSSplashScreenShowOptions {
 
 export interface WSSplashScreenHideOptions {
   /**
-   * How long to delay before hiding. Default is 0.
+   * How long to delay before hiding. Default: 0.
    */
   delay?: WSSplashScreenDuration;
 
   /**
-   * How long to fade out. Default is 200 ms.
+   * How long to fade out. Default: 200 ms.
    */
   fadeOutDuration?: WSSplashScreenDuration;
 }
@@ -248,21 +263,46 @@ export interface WSSplashScreenAppStateOptions {
 }
 
 /**
- * If a plugin call is rejected, the error code will be one of these.
+ * If a plugin call is rejected, the error will contain a string .code property
+ * whose value will be one of these.
  */
 export enum WSSplashScreenErrorType {
+  /**
+   * show() was called and no splash resource could be found
+   */
+  notFound = 'notFound',
+
+  /**
+   * hide() or animate() was called when show() rejected with 'notFound'.
+   */
   noSplashScreen = 'noSplashScreen',
+
+  /**
+   * animate() was called but no animation method could be found in the app.
+   */
   animateMethodNotFound = 'animateMethodNotFound',
+}
+
+/**
+ * If an error occurs, the returned Error object has a .code property
+ * which is the string name of a StorageErrorType.
+ */
+export interface PluginError extends PluginResultError {
+  code: string;
 }
 
 export interface WSSplashScreenPlugin {
   /**
-   * Show the splash screen
+   * Show the splash screen.
+   *
+   * @throws {PluginError} See WSSplashScreenErrorType for possible errors
    */
   show(options?: WSSplashScreenShowOptions): Promise<void>;
 
   /**
-   * Hide the splash screen
+   * Hide the splash screen.
+   *
+   * @throws {PluginError} See WSSplashScreenErrorType for possible errors
    */
   hide(options?: WSSplashScreenHideOptions): Promise<void>;
 
@@ -270,8 +310,13 @@ export interface WSSplashScreenPlugin {
    * Animate the splash screen. This is typically called when your app
    * is mounted. Note this will do nothing unless the animate option is true.
    *
-   * @throws {Error} If animateSplashScreen() is not defined in your native
-   *   application code.
+   * @throws {PluginError} See WSSplashScreenErrorType for possible errors
    */
-  animate(): Promise<void>;
+  animate(options?: WSSplashScreenAnimateOptions): Promise<void>;
+
+  /**
+   * Converts a duration to milliseconds. See the comments for WSSplashScreenDuration
+   * for more information.
+   */
+  toMilliseconds(value: WSSplashScreenDuration): WSSplashScreenDuration;
 }
