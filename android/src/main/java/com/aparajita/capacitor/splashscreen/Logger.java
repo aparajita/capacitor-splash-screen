@@ -1,4 +1,4 @@
-package com.willsub.splashscreen;
+package com.aparajita.capacitor.splashscreen;
 
 import android.util.Log;
 import java.util.HashMap;

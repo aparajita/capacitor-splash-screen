@@ -1,4 +1,4 @@
-package com.willsub.splashscreen;
+package com.aparajita.capacitor.splashscreen;
 
 import com.getcapacitor.CapConfig;
 import com.getcapacitor.JSObject;
@@ -11,7 +11,6 @@ import org.json.JSONObject;
  * This is a more flexible version of the CapConfig class. The main difference is it allows
  * platform-specific options to be placed in a platform subobject without the platform prefix.
  */
-@SuppressWarnings("ALL")
 public class Config {
 
     static final String PLATFORM_CONFIG_PREFIX = "android";
@@ -57,7 +56,7 @@ public class Config {
      *   }
      * }
      */
-    public Object getConfigValue(String keyPath, Object defaultValue, Class type) {
+    public Object getConfigValue(String keyPath, Object defaultValue, Class<?> type) {
         if (config == null) {
             return defaultValue;
         }
@@ -128,7 +127,7 @@ public class Config {
         return object;
     }
 
-    private Object getTypedValue(JSONObject object, String key, Class type) {
+    private Object getTypedValue(JSONObject object, String key, Class<?> type) {
         if (type == String.class) {
             try {
                 return object.getString(key);
@@ -216,7 +215,7 @@ public class Config {
     /**
      * Get a value from a plugin call, falling back to global config
      */
-    public Object getOptionValue(String keyPath, PluginCall pluginCall, Object defaultValue, Class type) {
+    public Object getOptionValue(String keyPath, PluginCall pluginCall, Object defaultValue, Class<?> type) {
         if (pluginCall != null) {
             // First try the plugin call's options
             final Object value = getOption(keyPath, pluginCall, type);
@@ -255,7 +254,7 @@ public class Config {
      *   }
      * }
      */
-    public Object getOption(String keyPath, PluginCall call, Class type) {
+    public Object getOption(String keyPath, PluginCall call, Class<?> type) {
         JSObject object = getOptionObjectDeepest(keyPath, call);
 
         if (object == null) {
