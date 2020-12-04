@@ -258,6 +258,11 @@ export interface WSSplashScreenHideOptions {
 
 export interface WSSplashScreenAnimateOptions {
   /**
+   * How to delay before starting the animation. Default: 0.
+   */
+  delay?: WSSplashScreenDuration;
+
+  /**
    * Arbitrary options may be passed to your animation code
    */
   [key: string]: any;

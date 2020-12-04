@@ -140,7 +140,7 @@ public class WSSplashScreen: CAPPlugin {
   /*
    * animate() plugin call. Starts splash screen animation.
    */
-  @objc public func animate(_ call: CAPPluginCall) {
+  @objc public func nativeAnimate(_ call: CAPPluginCall) {
     guard splashView != nil else {
       return noSplashAvailable(forCall: call)
     }

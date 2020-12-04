@@ -62,8 +62,22 @@ export class WSSplashScreenWeb
     return this.showHide('hide', options);
   }
 
+  animate(options?: WSSplashScreenAnimateOptions): Promise<void> {
+    if (options && options.delay) {
+      const { delay, ...opts } = options;
+
+      return new Promise(resolve => {
+        setTimeout(() => {
+          this.nativeAnimate(opts).then(() => resolve());
+        }, this.toMilliseconds(delay));
+      });
+    }
+
+    return this.nativeAnimate(options);
+  }
+
   @native()
-  animate(_options?: WSSplashScreenAnimateOptions): Promise<void> {
+  nativeAnimate(_options?: WSSplashScreenAnimateOptions): Promise<void> {
     return Promise.resolve();
   }
 
