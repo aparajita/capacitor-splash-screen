@@ -37,7 +37,7 @@ extension UIColor {
       var rgbString = ""
 
       hexString.forEach { char in
-        rgbString = rgbString + String(char) + String(char)
+        rgbString += String(char) + String(char)
       }
 
       hexString = rgbString
@@ -69,22 +69,22 @@ extension UIColor {
 
   static func from(string: String) -> UIColor? {
     switch string {
-      case "systemBackground":
-        if #available(iOS 13.0, *) {
-          return UIColor.systemBackground
-        } else {
-          return UIColor.white
-        }
+    case "systemBackground":
+      if #available(iOS 13.0, *) {
+        return UIColor.systemBackground
+      } else {
+        return UIColor.white
+      }
 
-      case "systemText":
-        if #available(iOS 13.0, *) {
-          return UIColor.label
-        } else {
-          return UIColor.black
-        }
+    case "systemText":
+      if #available(iOS 13.0, *) {
+        return UIColor.label
+      } else {
+        return UIColor.black
+      }
 
-      default:
-        return UIColor(fromHex: string)
+    default:
+      return UIColor(fromHex: string)
     }
   }
 }
