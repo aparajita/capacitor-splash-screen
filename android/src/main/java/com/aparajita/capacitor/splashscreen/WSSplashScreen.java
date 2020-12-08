@@ -143,7 +143,7 @@ public class WSSplashScreen extends Plugin {
     }
 
     @PluginMethod
-    public void animate(PluginCall call) {
+    public void nativeAnimate(PluginCall call) {
         if (splashView == null) {
             call.reject("No splash screen view is available", ErrorType.NO_SPLASH.getCode());
             return;
