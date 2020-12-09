@@ -91,7 +91,11 @@ extension WSSplashScreen {
         DispatchQueue.main.asyncAfter(
           deadline: DispatchTime.now() + options.showDuration
         ) {
-          let hideOptions = HideOptions(plugin: self, call: call)
+          var hideOptions = HideOptions(plugin: self, call: call)
+
+          // If auto-hiding, the delay is not used
+          hideOptions.delay = 0
+
           self.hideSplash(withOptions: hideOptions, pluginCall: call)
         }
       } else {

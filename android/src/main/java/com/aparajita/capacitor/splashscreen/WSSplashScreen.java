@@ -507,14 +507,18 @@ public class WSSplashScreen extends Plugin {
             public void onAnimationEnd(Animator animator) {
                 isVisible = true;
 
-                // If the splash is animated, return immediately after fading in
-                long delay = options.animated ? 0 : options.showDuration;
+                // If the splash is animated or autoHide is not on, return immediately after fading in
+                long delay = options.animated || !options.autoHide ? 0 : options.showDuration;
 
                 new Handler()
                 .postDelayed(
                         () -> {
                             if (options.autoHide) {
                                 HideOptions hideOptions = new HideOptions(plugin, call);
+
+                                // If auto-hiding, don't use the delay
+                                hideOptions.delay = 0;
+
                                 hide(activity, call, hideOptions);
                             }
 
