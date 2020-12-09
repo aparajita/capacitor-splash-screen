@@ -12,7 +12,7 @@
     "prettier.fix": "prettier --write --check --plugin=./node_modules/prettier-plugin-java \"**/*.{css,html,ts,js,java}\"",
     "swiftlint": "node-swiftlint",
     "swiftlint.fix": "node-swiftlint autocorrect",
-    "build": "npm run clean && tsc && rollup -c rollup.config.js && make-ios-plugin",
+    "build": "npm run clean && tsc && rollup -c rollup.config.js",
     "clean": "rimraf ./dist",
     "watch": "nodemon -w ./src -w tsconfig.json -w rollup.config.js --exec 'npm run build --silent' -e ts"
   },
@@ -32,6 +32,9 @@
     "rollup": "^2.34.0",
     "swiftlint": "^1.0.1",
     "typescript": "~4.1.2"
+  },
+  "dependencies": {
+    "@capacitor/core": "^2.4.4"
   },
   "files": [
     "dist/",
@@ -62,10 +65,5 @@
   },
   "bugs": {
     "url": "https://github.com/willsub/ws-capacitor-splashscreen.git/issues"
-  },
-  "dependencies": {
-    "@capacitor/core": "^2.4.3",
-    "tslib": "^2.0.3",
-    "ws-capacitor-native-decorator": "^1.0.3"
   }
 }

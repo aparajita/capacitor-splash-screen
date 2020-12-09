@@ -40,7 +40,14 @@ extension WSSplashScreen {
       animatePluginCall?.resolve()
     }
 
-    DispatchQueue.main.async {
+    var delay = 0.0
+
+    if let call = call {
+      delay = WSSplashScreen.toSeconds(call.getDouble("delay") ?? 0)
+    }
+
+    DispatchQueue.main.asyncAfter(
+      deadline: DispatchTime.now() + delay) {
       if let delegate = UIApplication.shared.delegate,
          let eventHandler = self.eventHandler {
         var options: [AnyHashable: Any]?

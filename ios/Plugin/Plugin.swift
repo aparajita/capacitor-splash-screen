@@ -16,19 +16,12 @@ import Capacitor
  *    thus filling the gap in time.
  */
 
+private let kDurationMillisecondThreshold = 10.0
 private let kDefaultFadeInDuration = 0.2
 private let kDefaultFadeOutDuration = 0.2
 private let kDefaultShowDuration = 3.0
 private let kDefaultAutoHide = false
 private let kDefaultAnimated = false
-
-/*
- * iOS animation methods usually want seconds for durations.
- * Durations passed in are in milliseconds.
- */
-private func toSeconds(_ value: Double) -> Double {
-  return value / 1000
-}
 
 @objc(WSSplashScreen)
 public class WSSplashScreen: CAPPlugin {
@@ -39,6 +32,7 @@ public class WSSplashScreen: CAPPlugin {
   }
 
   struct ShowOptions {
+    var delay: Double
     var showDuration: Double
     var fadeInDuration: Double
     var fadeOutDuration: Double
@@ -49,6 +43,7 @@ public class WSSplashScreen: CAPPlugin {
     var isLaunchSplash: Bool
 
     init(withPlugin plugin: WSSplashScreen, pluginCall call: CAPPluginCall?, isLaunchSplash: Bool) {
+      delay = toSeconds(plugin.getConfigDouble(withKeyPath: "delay", pluginCall: call) ?? 0)
       showDuration = toSeconds(plugin.getConfigDouble(withKeyPath: "showDuration", pluginCall: call) ?? kDefaultShowDuration)
       fadeInDuration = toSeconds(plugin.getConfigDouble(withKeyPath: "fadeInDuration", pluginCall: call) ?? kDefaultFadeInDuration)
       fadeOutDuration = toSeconds(plugin.getConfigDouble(withKeyPath: "fadeOutDuration", pluginCall: call) ?? kDefaultFadeOutDuration)
@@ -94,6 +89,14 @@ public class WSSplashScreen: CAPPlugin {
   var eventHandler: Selector?
 
   /*
+   * iOS animation methods usually want seconds for durations.
+   * Durations passed in to the plugin >= 10 are considered milliseconds, otherwise seconds.
+   */
+  static func toSeconds(_ value: Double) -> Double {
+    return value >= kDurationMillisecondThreshold ? value / 1000 : value
+  }
+
+  /*
    * Called when the plugin is loaded. Note the web view is not initialized yet,
    * but the bridge view controller is. We take this opportunity to show the
    * appropriate splash view in the bridge view controller.
@@ -105,7 +108,7 @@ public class WSSplashScreen: CAPPlugin {
       eventHandler = selector
     }
 
-    let showDuration = getConfigDouble(withKeyPath: "showDuration") ?? kDefaultShowDuration
+    let showDuration = WSSplashScreen.toSeconds(getConfigDouble(withKeyPath: "showDuration") ?? kDefaultShowDuration)
 
     if showDuration == 0 {
       logger.info("showDuration = 0, splash screen disabled")
@@ -116,18 +119,18 @@ public class WSSplashScreen: CAPPlugin {
   }
 
   /*
-   * nativeShow() plugin call. Shows the splashscreen.
+   * show() plugin call. Shows the splashscreen.
    */
-  @objc public func nativeShow(_ call: CAPPluginCall) {
+  @objc public func show(_ call: CAPPluginCall) {
     let options = ShowOptions(withPlugin: self, pluginCall: call, isLaunchSplash: false)
     logger.debug("show():", options)
     showSplash(withOptions: options, pluginCall: call)
   }
 
   /*
-   * nativeHide() plugin call. Hides the splash screen.
+   * hide() plugin call. Hides the splash screen.
    */
-  @objc public func nativeHide(_ call: CAPPluginCall) {
+  @objc public func hide(_ call: CAPPluginCall) {
     guard splashView != nil else {
       return noSplashAvailable(forCall: call)
     }
@@ -140,7 +143,7 @@ public class WSSplashScreen: CAPPlugin {
   /*
    * animate() plugin call. Starts splash screen animation.
    */
-  @objc public func nativeAnimate(_ call: CAPPluginCall) {
+  @objc public func animate(_ call: CAPPluginCall) {
     guard splashView != nil else {
       return noSplashAvailable(forCall: call)
     }

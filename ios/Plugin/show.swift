@@ -103,7 +103,7 @@ extension WSSplashScreen {
 
     UIView.animate(
       withDuration: options.fadeInDuration,
-      delay: 0,
+      delay: options.delay,
       options: [.overrideInheritedOptions, .curveLinear],
       animations: {
         self.splashView?.alpha = 1

@@ -16,7 +16,7 @@ export default {
     nodeResolve({
       // allowlist of dependencies to bundle in
       // @see https://github.com/rollup/plugins/tree/master/packages/node-resolve#resolveonly
-      resolveOnly: ['tslib', 'ws-capacitor-native-decorator'],
+      resolveOnly: [''],
     }),
     commonjs(),
   ],

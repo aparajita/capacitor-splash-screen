@@ -104,6 +104,11 @@ export type WSSplashScreenDuration = number;
 
 export interface WSSplashScreenIosShowOptions {
   /**
+   * See WSSplashScreenOptions.iosSource
+   */
+  source?: string;
+
+  /**
    * See WSSplashScreenShowOptions.iosSpinnerStyle
    */
   spinnerStyle?: WSSplashScreenIosSpinnerStyle;
@@ -115,6 +120,11 @@ export interface WSSplashScreenIosShowOptions {
 }
 
 export interface WSSplashScreenAndroidShowOptions {
+  /**
+   * See WSSplashScreenOptions.androidSource
+   */
+  source?: string;
+
   /**
    * See WSSplashScreenShowOptions.androidSpinnerStyle
    */
@@ -141,6 +151,16 @@ export interface WSSplashScreenShowOptions {
    * Default: '*'
    */
   source?: string;
+
+  /**
+   * If specified, this overrides source on iOS.
+   */
+  iosSource?: string;
+
+  /**
+   * If specified, this overrides source on Android.
+   */
+  androidSource?: string;
 
   /**
    * How long to delay before showing the splash screen.
@@ -331,10 +351,24 @@ export interface WSSplashScreenPlugin {
    * @throws {PluginError} See WSSplashScreenErrorType for possible errors
    */
   animate(options?: WSSplashScreenAnimateOptions): Promise<void>;
-
-  /**
-   * Converts a duration to milliseconds. See the comments for WSSplashScreenDuration
-   * for more information.
-   */
-  toMilliseconds(value: WSSplashScreenDuration): WSSplashScreenDuration;
 }
+
+/**
+ * Listen to changes in the app state and execute the relevant code.
+ * This is a convenience to allow you to easily show a splash when
+ * your app resumes.
+ *
+ * @param {boolean} listen
+ * @param {WSSplashScreenAppStateOptions} options
+ */
+declare function listenToAppState(
+  listen: true,
+  options: WSSplashScreenAppStateOptions,
+): void;
+
+/**
+ * Turn off listening to app state changes.
+ *
+ * @param {boolean} listen
+ */
+declare function listenToAppState(listen: false): void;

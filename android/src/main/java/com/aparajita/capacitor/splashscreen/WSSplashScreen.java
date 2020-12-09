@@ -24,6 +24,7 @@ import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import androidx.annotation.NonNull;
+import com.getcapacitor.CapConfig;
 import com.getcapacitor.NativePlugin;
 import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginCall;
@@ -35,14 +36,16 @@ import java.util.HashMap;
 @NativePlugin
 public class WSSplashScreen extends Plugin {
 
-    private static final Integer DEFAULT_FADE_IN_DURATION = 200;
-    private static final Integer DEFAULT_FADE_OUT_DURATION = 200;
-    private static final Integer DEFAULT_SHOW_DURATION = 3000;
+    private static final Double DEFAULT_FADE_IN_DURATION = 200.0;
+    private static final Double DEFAULT_FADE_OUT_DURATION = 200.0;
+    private static final Double DEFAULT_SHOW_DURATION = 3000.0;
     private static final Boolean DEFAULT_AUTO_HIDE = false;
     private static final Boolean DEFAULT_ANIMATED = false;
     private static final Boolean DEFAULT_SHOW_SPINNER = false;
     private static final Boolean DEFAULT_FULLSCREEN_MODE = false;
+    private static final double DURATION_MS_THRESHOLD = 10.0;
     private static final String SOURCE_OPTION = "source";
+    private static final String ANDROID_SOURCE_OPTION = "androidSource";
     private static final String DELAY_OPTION = "delay";
     private static final String FADE_IN_OPTION = "fadeInDuration";
     private static final String DURATION_OPTION = "showDuration";
@@ -122,14 +125,14 @@ public class WSSplashScreen extends Plugin {
     }
 
     @PluginMethod
-    public void nativeShow(final PluginCall call) {
+    public void show(final PluginCall call) {
         ShowOptions options = new ShowOptions(this, call, false);
         logger.debug(tag, options.toString());
         show(call, options, config);
     }
 
     @PluginMethod
-    public void nativeHide(PluginCall call) {
+    public void hide(PluginCall call) {
         if (splashView == null) {
             call.reject("No splash screen view is available", ErrorType.NO_SPLASH.getCode());
             return;
@@ -143,7 +146,7 @@ public class WSSplashScreen extends Plugin {
     }
 
     @PluginMethod
-    public void nativeAnimate(PluginCall call) {
+    public void animate(PluginCall call) {
         if (splashView == null) {
             call.reject("No splash screen view is available", ErrorType.NO_SPLASH.getCode());
             return;
@@ -153,7 +156,7 @@ public class WSSplashScreen extends Plugin {
     }
 
     public void showOnLaunch(final Config config) {
-        int showDuration = config.getIntOption(DURATION_OPTION, null, DEFAULT_SHOW_DURATION);
+        int showDuration = toMilliseconds(config.getDoubleOption(DURATION_OPTION, null, DEFAULT_SHOW_DURATION));
 
         if (showDuration == 0) {
             logger.info(logTag, "showDuration = 0, splash screen disabled");
@@ -190,7 +193,7 @@ public class WSSplashScreen extends Plugin {
         if (splashView != null) {
             final Animator.AnimatorListener listener = makeShowAnimationListener(activity, options, call);
             final Handler mainHandler = new Handler(activity.getMainLooper());
-            mainHandler.post(makeRunner(activity, call, options, listener));
+            mainHandler.postDelayed(makeRunner(activity, call, options, listener), options.delay);
         }
     }
 
@@ -712,12 +715,16 @@ public class WSSplashScreen extends Plugin {
         tearDown();
     }
 
-    public void noSplashAvailable(PluginCall call) {
+    private void noSplashAvailable(PluginCall call) {
         call.reject("No splash screen view is available", ErrorType.NO_SPLASH.name());
     }
 
     public boolean getAutoHide() {
         return showOptions.autoHide;
+    }
+
+    private static int toMilliseconds(Double value) {
+        return value >= DURATION_MS_THRESHOLD ? value.intValue() : Double.valueOf(value * 1000.0).intValue();
     }
 
     enum HookEventType {
@@ -754,6 +761,7 @@ public class WSSplashScreen extends Plugin {
     public static class ShowOptions {
 
         public float startAlpha;
+        public int delay;
         public int fadeInDuration;
         public int showDuration;
         public int fadeOutDuration;
@@ -766,9 +774,10 @@ public class WSSplashScreen extends Plugin {
         public ShowOptions(Plugin plugin, PluginCall call, Boolean isLaunchSplash) {
             Config config = Config.getInstance(plugin);
             startAlpha = config.getFloatOption(START_ALPHA_OPTION, call, 0f);
-            fadeInDuration = config.getIntOption(FADE_IN_OPTION, call, DEFAULT_FADE_IN_DURATION);
-            showDuration = config.getIntOption(DURATION_OPTION, call, DEFAULT_SHOW_DURATION);
-            fadeOutDuration = config.getIntOption(FADE_OUT_OPTION, call, DEFAULT_FADE_OUT_DURATION);
+            delay = toMilliseconds(config.getDoubleOption(DELAY_OPTION, call, 0.0));
+            fadeInDuration = toMilliseconds(config.getDoubleOption(FADE_IN_OPTION, call, DEFAULT_FADE_IN_DURATION));
+            showDuration = toMilliseconds(config.getDoubleOption(DURATION_OPTION, call, DEFAULT_SHOW_DURATION));
+            fadeOutDuration = toMilliseconds(config.getDoubleOption(FADE_OUT_OPTION, call, DEFAULT_FADE_OUT_DURATION));
             backgroundColor = config.getStringOption(BACKGROUND_OPTION, call);
             animated = config.getBooleanOption(ANIMATED_OPTION, call, DEFAULT_ANIMATED);
 
@@ -808,8 +817,8 @@ public class WSSplashScreen extends Plugin {
 
         public HideOptions(Plugin plugin, PluginCall call) {
             Config config = Config.getInstance(plugin);
-            delay = config.getIntOption(DELAY_OPTION, call, 0);
-            fadeOutDuration = config.getIntOption(FADE_OUT_OPTION, call, DEFAULT_FADE_OUT_DURATION);
+            delay = toMilliseconds(config.getDoubleOption(DELAY_OPTION, call, 0.0));
+            fadeOutDuration = toMilliseconds(config.getDoubleOption(FADE_OUT_OPTION, call, DEFAULT_FADE_OUT_DURATION));
         }
 
         @SuppressLint("DefaultLocale")
