@@ -14,14 +14,20 @@ extension WSSplashScreen {
   func buildViews(forPluginCall call: CAPPluginCall?) {
     var found = false
 
-    // Allow the default legacy behavior of using a resource called "Splash".
-    var source = "Splash"
+    // Check for a source. The order of precedence is:
+    //   - iOS-specific
+    //   - cross-platform
+    //   - default
+    var source = ""
 
-    // See if a source was specified in the call or the config. This takes precedence
-    // over the default.
-    if let sourceOption = getConfigString(withKeyPath: "source", pluginCall: call),
-       !sourceOption.isEmpty {
-      source = sourceOption
+    // Check call first
+    if let call = call {
+      source = call.getStringOption("iosSource") ?? call.getStringOption("source") ?? ""
+    }
+
+    // If the source is not in the call, check config, then fall back to the default
+    if source.isEmpty {
+      source = getConfigString(withKeyPath: "iosSource") ?? getConfigString(withKeyPath: "source") ?? "Splash"
     }
 
     // If the source has not changed, the splashView should already be built
@@ -68,6 +74,15 @@ extension WSSplashScreen {
 
     // Observe for changes on frame and bounds to handle rotation resizing
     _ = BoundsObserver(forSplash: self)
+  }
+
+  func getSourceOption(named name: String, call: CAPPluginCall?) -> String {
+    if let sourceOption = getConfigString(withKeyPath: name, pluginCall: call),
+       !sourceOption.isEmpty {
+      return sourceOption
+    }
+
+    return ""
   }
 
   /*

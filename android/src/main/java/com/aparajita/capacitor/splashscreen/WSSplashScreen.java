@@ -246,17 +246,33 @@ public class WSSplashScreen extends Plugin {
     }
 
     private void buildViews(Context context, ShowOptions options, PluginCall call, Config config) {
-        // Allow the default legacy behavior of using a resource called "Splash".
-        String source = "splash";
+        // Check for a source. The order of precedence is:
+        //   - Android-specific
+        //   - cross-platform
+        //   - default
 
-        // See if the user specified a source, that takes precedence
-        String sourceOption = config.getStringOption(SOURCE_OPTION, call);
+        String source = "";
 
-        if (sourceOption != null && !sourceOption.isEmpty()) {
-            source = sourceOption;
+        // If there is a call, check that first
+        if (call != null) {
+            source = (String) config.getOption(ANDROID_SOURCE_OPTION, call, String.class);
+
+            if (source == null || source.isEmpty()) {
+                source = (String) config.getOption(SOURCE_OPTION, call, String.class);
+            }
         }
 
-        boolean found = false;
+        // If the source was not in the call, check config
+        if (source == null || source.isEmpty()) {
+            source = config.getString(ANDROID_SOURCE_OPTION, config.getString(SOURCE_OPTION, ""));
+        }
+
+        if (source.isEmpty()) {
+            // Fall back to legacy default
+            source = "splash";
+        }
+
+        boolean found;
         String error = "";
 
         // If the splash source has not changed, no need to rebuild it
@@ -276,6 +292,10 @@ public class WSSplashScreen extends Plugin {
                 }
             } catch (Exception e) {
                 error = e.getMessage();
+
+                if (error == null) {
+                    error = "";
+                }
             }
         }
 

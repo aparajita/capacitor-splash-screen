@@ -62,6 +62,11 @@ public class Config {
         }
 
         try {
+            // If the path is not full, make it full now
+            if (!keyPath.startsWith("plugins.")) {
+                keyPath = "plugins." + plugin.getPluginHandle().getId() + "." + keyPath;
+            }
+
             // Try the key path as is
             JSONObject object = getConfigObjectDeepest(keyPath);
 
@@ -228,7 +233,6 @@ public class Config {
         }
 
         // If the value can't be found in the call's options, try global config
-        keyPath = String.format("plugins.%s.%s", plugin.getPluginHandle().getId(), keyPath);
         return this.getConfigValue(keyPath, defaultValue, type);
     }
 
