@@ -8,7 +8,7 @@ declare module '@capacitor/core' {
 
 /**
  * The mode used to place and scale an image splash screen.
- * Ignored for storyboard-based splash screens. Valid values are:
+ * Ignored for storyboard-based splash screens.
  *
  * fill - Scale the image to fill, not keeping the aspect ratio.
  *
@@ -36,21 +36,8 @@ export type WSSplashScreenIosImageDisplayMode =
   | 'bottomRight';
 
 /**
- * Possible Android spinner styles. For more information,
- * see https://developer.android.com/reference/android/R.attr.html#progressBarStyle
- */
-export type WSSplashScreenAndroidSpinnerStyle =
-  | 'small'
-  | 'smallInverse'
-  | 'medium'
-  | 'mediumInverse'
-  | 'large'
-  | 'largeInverse'
-  | 'horizontal';
-
-/**
  * The mode used to place and scale an image splash screen.
- * Ignored for layout-based splash screens. Valid values are:
+ * Ignored for layout-based splash screens.
  *
  * fill - Scale the image to fill, not keeping the aspect ratio.
  *
@@ -75,6 +62,19 @@ export type WSSplashScreenAndroidImageDisplayMode =
  * Possible iOS spinner styles.
  */
 export type WSSplashScreenIosSpinnerStyle = 'small' | 'large';
+
+/**
+ * Possible Android spinner styles. For more information,
+ * see https://developer.android.com/reference/android/R.attr.html#progressBarStyle
+ */
+export type WSSplashScreenAndroidSpinnerStyle =
+  | 'small'
+  | 'smallInverse'
+  | 'medium'
+  | 'mediumInverse'
+  | 'large'
+  | 'largeInverse'
+  | 'horizontal';
 
 /**
  * Colors may be one of the following named colors or a hex color.
@@ -104,7 +104,7 @@ export type WSSplashScreenDuration = number;
 
 export interface WSSplashScreenIosShowOptions {
   /**
-   * See WSSplashScreenOptions.iosSource
+   * See WSSplashScreenShowOptions.iosSource
    */
   source?: string;
 
@@ -121,7 +121,7 @@ export interface WSSplashScreenIosShowOptions {
 
 export interface WSSplashScreenAndroidShowOptions {
   /**
-   * See WSSplashScreenOptions.androidSource
+   * See WSSplashScreenShowOptions.androidSource
    */
   source?: string;
 
@@ -238,7 +238,7 @@ export interface WSSplashScreenShowOptions {
 
   /**
    * The mode used to place and scale an image splash screen.
-   * Ignored for storyboard-based splash screens. Valid values are:
+   * Ignored for storyboard-based splash screens.
    */
   iosImageDisplayMode?: WSSplashScreenIosImageDisplayMode;
 
@@ -278,7 +278,7 @@ export interface WSSplashScreenHideOptions {
 
 export interface WSSplashScreenAnimateOptions {
   /**
-   * How to delay before starting the animation. Default: 0.
+   * How long to delay before starting the animation. Default: 0.
    */
   delay?: WSSplashScreenDuration;
 
