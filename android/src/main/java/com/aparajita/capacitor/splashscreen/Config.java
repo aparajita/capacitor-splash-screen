@@ -81,17 +81,14 @@ public class Config {
             final String prefix = PLATFORM_CONFIG_PREFIX;
             int len = prefix.length();
 
-            if (key.startsWith(prefix) && key.length() > prefix.length() && object instanceof JSONObject) {
+            if (key.startsWith(prefix) && key.length() > prefix.length()) {
                 JSONObject platformObject = ((JSONObject) object).getJSONObject(prefix);
+                String firstLetter = key.substring(len, len + 1).toLowerCase();
+                String suffix = firstLetter + key.substring(len + 1);
+                value = getTypedValue(platformObject, suffix, type);
 
-                if (platformObject != null) {
-                    String firstLetter = key.substring(len, len + 1).toLowerCase();
-                    String suffix = firstLetter + key.substring(len + 1);
-                    value = getTypedValue(platformObject, suffix, type);
-
-                    if (value != null) {
-                        return value;
-                    }
+                if (value != null) {
+                    return value;
                 }
             }
         } catch (Exception e) {
@@ -154,8 +151,8 @@ public class Config {
 
         if (type == Float.class) {
             try {
-                Double result = object.getDouble(key);
-                return (Float) result.floatValue();
+                double result = object.getDouble(key);
+                return (Float) (float) result;
             } catch (JSONException e) {
                 return null;
             }
@@ -185,7 +182,7 @@ public class Config {
     }
 
     public Integer getInt(String keyPath, Integer defaultValue) {
-        return (Integer) this.<Integer>getConfigValue(keyPath, defaultValue, Integer.class);
+        return (Integer) this.getConfigValue(keyPath, defaultValue, Integer.class);
     }
 
     public Double getDouble(String keyPath) {
@@ -193,7 +190,7 @@ public class Config {
     }
 
     public Double getDouble(String keyPath, Double defaultValue) {
-        return (Double) this.<Double>getConfigValue(keyPath, defaultValue, Double.class);
+        return (Double) this.getConfigValue(keyPath, defaultValue, Double.class);
     }
 
     public Float getFloat(String keyPath) {
@@ -201,7 +198,7 @@ public class Config {
     }
 
     public Float getFloat(String keyPath, Float defaultValue) {
-        return (Float) this.<Float>getConfigValue(keyPath, defaultValue, Float.class);
+        return (Float) this.getConfigValue(keyPath, defaultValue, Float.class);
     }
 
     public Boolean getBoolean(String keyPath) {
@@ -209,7 +206,7 @@ public class Config {
     }
 
     public Boolean getBoolean(String keyPath, Boolean defaultValue) {
-        return (Boolean) this.<Boolean>getConfigValue(keyPath, defaultValue, Boolean.class);
+        return (Boolean) this.getConfigValue(keyPath, defaultValue, Boolean.class);
     }
 
     /**
