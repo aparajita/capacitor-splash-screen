@@ -1,18 +1,20 @@
-# Super Splash Screen
+# Splash Screen
 
-This [Capacitor](https://capacitorjs.com) plugin provides complete control over native splash screens.
+This [Capacitor](https://capacitorjs.com) plugin provides complete control over native splash screens, both automatically at launch and via code.
 
 ## Features
 
 * On iOS, both images and storyboards are supported.
 * On Android, both images and layouts are supported.
-* On iOS, seamless, automatic transition from the app’s launch screen to an identical splash screen.
+* Seamless, automatic transition from an iOS app’s launch screen to an identical splash screen.
 * Support for all native image sizing and placement modes.
 * Complete control over timing: delay, fade in, duration, fade out.
 * Specify time units in seconds or milliseconds.
 * Control over the splash screen background, including alpha.
 * Support for dark mode (iOS only).
 * Hooks for user animation of a splash screen.
+
+A demo which shows all of the features can be found [here](https://github.com/aparajita/ws-capacitor-splashscreen-demo).
 
 ## Installation
 
@@ -156,3 +158,96 @@ is mounted. Note this will do nothing unless the animate option is true.
 | delay | number | How long to delay before starting the animation. Default: 0. |
 
 </docgen-api>
+
+## Custom animation
+
+Splash Screen supports custom animation on both iOS and Android. The demo app contains custom animation on both platforms, which you can use as a template for your animation.
+
+In general, to animate a splash screen, you need to do the following:
+
+* Make sure that the `animated` option is true, either in the plugin config or in the options passed to the `show()` plugin method.
+* Call the `show()` plugin method (unless it’s at launch, when that is done for you), and when that returns; 
+* Call the `animate()` plugin method. You may pass arbitrary values to your animation code through the `animate()` options.
+
+### Events
+
+There are three animation events sent to your animation method. Of the three, you are only required to respond to the `animate` event.
+
+* **beforeShow** — This event is sent after the splash screen and spinner views have been built, but just before they are faded in. If you need to create or modify views, this is the place to do it.
+* **animate** — This event is sent when the `animate()` method is called, after any delay specified in the method options.
+* **afterShow** — This event is sent after the animation is finished and the splash screen and spinner have been removed from their superview. If you created your own views, this is the place to remove them.
+
+### Event handler
+
+In order to receive animation events (and thus perform animation), you need to create an animation handler method in your app’s native code. On iOS, the event handler will look like this:
+
+```swift
+import Capacitor
+
+enum EventType: String {
+  case animate
+  case beforeShow
+  case afterShow
+}
+
+extension AppDelegate {
+  @objc func onSplashScreenEvent(_ event: String, _ params: Any) {
+    guard let params = params as? [String: Any],
+          let eventType = EventType(rawValue: event) else {
+      return
+    }
+
+    switch eventType {
+    case .animate:
+      animate(withParams: params)
+
+    case .beforeShow:
+      handleBeforeShow(params: params)
+
+    case .afterShow:
+      handleAfterShow(params: params)
+    }
+  }
+}
+```
+
+On Android, the event handler will look like this:
+
+```java
+import java.util.HashMap;
+
+public class SplashScreen {
+    public void onSplashScreenEvent(String event, HashMap<String, Object> params) {
+        switch (event) {
+            case "beforeShow":
+                onBeforeShow(params);
+                break;
+
+            case "afterShow":
+                onAfterShow(params);
+                break;
+
+            case "animate":
+                animate(params);
+                break;
+        }
+    }
+}
+```
+
+👉**IMPORTANT**❗️
+The method names and signatures must be **exactly** as displayed above.
+
+### Event parameters
+
+Each event receives parameters from the plugin with context that you may need in performing your animation. All of the events receive the first four of the following parameters. The `done` parameter is only passod to the `animate` event.
+
+| Param | Type (iOS / Android) | Description |
+| :---- | :--- | :---------- |
+| plugin | CAPPlugin<br>com.getcapacitor.Plugin | The SplashScreenPlugin instance which called the event handler |
+| splashView | UIView<br>android.view.View | The view to be animated |
+| spinnerView | UIActivityIndicatorView<br>android.widget.ProgressBar | If the `showSpinner` option is `true`, the spinner view |
+| options | [AnyHashable: Any]?<br>com.getcapacitor.JSObject | Any options passed to the `animate()` plugin method |
+| done | () -> Void<br>Runnable | A function you **must** call when the animation is completely finished |
+
+As noted above, you **must** call the `done` callback when the animation is completely done, otherwise control will not be returned to the JavaScript runtime. In most cases you will do this in the animation completion function.
