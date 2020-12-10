@@ -1,7 +1,7 @@
 {
-  "name": "ws-capacitor-splashscreen",
+  "name": "@capacitor/splash-screen",
   "version": "1.0.0",
-  "description": "Provides access to the native biometric auth APIs for Capacitor apps",
+  "description": "Provides support for native splash screens in Capacitor apps",
   "main": "dist/esm/index.js",
   "module": "dist/esm/index.js",
   "types": "dist/esm/index.d.ts",
@@ -34,7 +34,8 @@
     "typescript": "~4.1.2"
   },
   "dependencies": {
-    "@capacitor/core": "^2.4.4"
+    "@capacitor/core": "^2.4.4",
+    "@capacitor/docgen": "^0.0.10"
   },
   "files": [
     "dist/",
