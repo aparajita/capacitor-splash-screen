@@ -2,11 +2,11 @@
 
 This [Capacitor](https://capacitorjs.com) plugin provides complete control over native splash screens, both automatically at launch and via code.
 
-[Features](#features)
-[Installation](#installation)
-[Configuration](#configuration)
-[Usage](#usage)
-[Custom animation](#custom-animation)
+[Features](#features)<br>
+[Installation](#installation)<br>
+[Configuration](#configuration)<br>
+[Usage](#usage)<br>
+[Custom animation](#custom-animation)<br>
 [API](#api)
 
 ## Features
