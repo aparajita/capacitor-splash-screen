@@ -1,5 +1,7 @@
 # Splash Screen
 
+👉 **NOTE:** This plugin does not yet work with Capacitor 3. I don’t anticipate working on that until Capacitor 3 is out of beta.
+
 This [Capacitor](https://capacitorjs.com) plugin provides complete control over native splash screens, both automatically at launch and via code.
 
 [Features](#features)<br>
