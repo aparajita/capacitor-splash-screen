@@ -7,7 +7,7 @@
   "types": "dist/esm/index.d.ts",
   "scripts": {
     "clean": "rimraf ./dist",
-    "build": "npm run clean && tsc && rollup -c rollup.config.js && make-ios-plugin",
+    "build": "npm run clean && tsc && rollup -c rollup.config.js",
     "watch": "nodemon -w ./src -w tsconfig.json -w rollup.config.js --exec 'npm run build --silent' -e ts",
     "lint": "npm run prettier && npm run swiftlint",
     "lint.fix": "npm run prettier.fix && npm run swiftlint.fix",
@@ -23,7 +23,6 @@
   "license": "MIT",
   "devDependencies": {
     "@aparajita/capacitor-docgen": "^0.0.10-3",
-    "@aparajita/capacitor-native-decorator": "^1.1.1",
     "@ionic/prettier-config": "^1.0.1",
     "@ionic/swiftlint-config": "^1.1.2",
     "@rollup/plugin-commonjs": "^18.0.0",

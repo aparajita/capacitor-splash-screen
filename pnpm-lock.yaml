@@ -5,7 +5,6 @@ dependencies:
   '@capacitor/ios': 2.4.7_@capacitor+core@2.4.7
 devDependencies:
   '@aparajita/capacitor-docgen': 0.0.10-3
-  '@aparajita/capacitor-native-decorator': 1.1.1
   '@ionic/prettier-config': 1.0.1_prettier@2.2.1
   '@ionic/swiftlint-config': 1.1.2
   '@rollup/plugin-commonjs': 18.0.0_rollup@2.44.0
@@ -32,13 +31,6 @@ packages:
     resolution:
       integrity: sha512-s6KHF4zHjzIgRSn1Zc+BjfBMdWD3A42CJ+2fnrvDrJTIU/yWr4to7CLqzOZuY8PFQ8/QjrqSAFs2zQVU7E8uZQ==
       tarball: '@aparajita/capacitor-docgen/-/capacitor-docgen-0.0.10-3.tgz'
-  /@aparajita/capacitor-native-decorator/1.1.1:
-    dependencies:
-      '@capacitor/core': 2.4.7
-    dev: true
-    hasBin: true
-    resolution:
-      integrity: sha512-Zci0V1MN0npvH7lBEQhCh5HTTr6VKKXej4+utaCB0E1Rb51RnjSOAYwjfFWF7OLNuc1eYcxcN8j5rfkyG3YpqA==
   /@babel/code-frame/7.12.13:
     dependencies:
       '@babel/highlight': 7.13.10
@@ -68,6 +60,7 @@ packages:
   /@capacitor/core/2.4.7:
     dependencies:
       tslib: 1.14.1
+    dev: false
     resolution:
       integrity: sha512-ZPzXXQ4EPwR/ZhNDkmlxyzw4FvquIl/ROj8HMMM0MEd4xZfM8ulNGPIL6br9TWdlFLGBKq40eymPZjKaivGnig==
   /@capacitor/docgen/0.0.16:
@@ -1390,6 +1383,7 @@ packages:
     resolution:
       integrity: sha512-L0Orpi8qGpRG//Nd+H90vFB+3iHnue1zSSGmNOOCh1GLJ7rUKVwV2HvijphGQS2UmhUZewS9VgvxYIdgr+fG1A==
   /tslib/1.14.1:
+    dev: false
     resolution:
       integrity: sha512-Xni35NKzjgMrwevysHTCArtLDpPvye8zV/0E4EyYn43P7/7qvQwPh9BGkHewbMulVntbigmcT7rdX3BNo9wRJg==
   /tslib/2.1.0:
@@ -1522,7 +1516,6 @@ packages:
       integrity: sha512-r3vXyErRCYJ7wg28yvBY5VSoAF8ZvlcW9/BwUzEtUsjvX/DKs24dIkuwjtuprwJJHsbyUbLApepYTR1BN4uHrg==
 specifiers:
   '@aparajita/capacitor-docgen': ^0.0.10-3
-  '@aparajita/capacitor-native-decorator': ^1.1.1
   '@capacitor/android': ^2.4.7
   '@capacitor/core': ^2.4.7
   '@capacitor/docgen': ^0.0.16
