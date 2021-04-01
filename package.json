@@ -1,5 +1,5 @@
 {
-  "name": "@capacitor/splash-screen",
+  "name": "@aparajita/capacitor-splash-screen",
   "version": "1.0.0",
   "description": "Provides support for native splash screens in Capacitor apps",
   "main": "dist/esm/index.js",
@@ -41,7 +41,7 @@
     "dist/",
     "ios/",
     "android/",
-    "WsCapacitorSplashscreen.podspec"
+    "AparajitaCapacitorSplashScreen.podspec"
   ],
   "keywords": [
     "capacitor",
@@ -62,9 +62,9 @@
   "swiftlint": "@ionic/swiftlint-config",
   "repository": {
     "type": "git",
-    "url": "https://github.com/willsub/ws-capacitor-splashscreen.git"
+    "url": "https://github.com/aparajita/capacitor-splashscreen"
   },
   "bugs": {
-    "url": "https://github.com/willsub/ws-capacitor-splashscreen.git/issues"
+    "url": "https://github.com/aparajita/capacitor-splashscreen/issues"
   }
 }

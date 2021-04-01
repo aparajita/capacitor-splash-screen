@@ -23,7 +23,7 @@ This [Capacitor](https://capacitorjs.com) plugin provides complete control over 
 * Support for dark mode (iOS only).
 * Hooks for user animation of a splash screen.
 
-A demo which shows all of the features can be found [here](https://github.com/aparajita/ws-capacitor-splashscreen-demo).
+A demo which shows all of the features can be found [here](https://github.com/aparajita/capacitor-splash-screen-demo).
 
 ## Installation
 

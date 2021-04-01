@@ -1,4 +1,4 @@
 
   <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-      package="com.aparajita.capacitor.splashscreen.WS_SplashScreen">
+      package="com.aparajita.capacitor.splashscreen">
   </manifest>
