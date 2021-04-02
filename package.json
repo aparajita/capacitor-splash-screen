@@ -73,9 +73,9 @@
   "swiftlint": "@ionic/swiftlint-config",
   "repository": {
     "type": "git",
-    "url": "https://github.com/aparajita/capacitor-splashscreen"
+    "url": "https://github.com/aparajita/capacitor-splash-screen"
   },
   "bugs": {
-    "url": "https://github.com/aparajita/capacitor-splashscreen/issues"
+    "url": "https://github.com/aparajita/capacitor-splash-screen/issues"
   }
 }
