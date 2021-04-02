@@ -38,7 +38,6 @@
   "dependencies": {
     "@capacitor/android": "^2.4.7",
     "@capacitor/core": "^2.4.7",
-    "@capacitor/docgen": "^0.0.16",
     "@capacitor/ios": "^2.4.7"
   },
   "files": [
