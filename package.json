@@ -41,10 +41,16 @@
     "@capacitor/ios": "^2.4.7"
   },
   "files": [
-    "dist/",
-    "ios/",
-    "android/",
-    "AparajitaCapacitorSplashScreen.podspec"
+    "dist/esm/*.d.ts",
+    "dist/esm/*.js",
+    "ios/Plugin",
+    "ios/Podfile",
+    "ios/Podfile.lock",
+    "android/build.gradle",
+    "android/gradle.properties",
+    "android/settings.gradle",
+    "android/src/main",
+    "*.podspec"
   ],
   "keywords": [
     "capacitor",
