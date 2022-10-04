@@ -2,64 +2,59 @@
   "name": "@aparajita/capacitor-splash-screen",
   "version": "1.0.1",
   "description": "A Capacitor plugin that provides full native splash screen functionality",
-  "main": "dist/esm/index.js",
-  "module": "dist/esm/index.js",
-  "types": "dist/esm/index.d.ts",
-  "scripts": {
-    "clean": "rimraf ./dist",
-    "build": "npm run clean && tsc && rollup -c rollup.config.js",
-    "watch": "nodemon -w ./src -w tsconfig.json -w rollup.config.js --exec 'npm run build --silent' -e ts",
-    "lint": "npm run prettier && npm run swiftlint",
-    "lint.fix": "npm run prettier.fix && npm run swiftlint.fix",
-    "prettier": "prettier --check --plugin=./node_modules/prettier-plugin-java \"**/*.{css,html,ts,js,java}\"",
-    "prettier.fix": "prettier --write --check --plugin=./node_modules/prettier-plugin-java \"**/*.{css,html,ts,js,java}\"",
-    "swiftlint": "cd ios; node-swiftlint; cd ..",
-    "swiftlint.fix": "cd ios; node-swiftlint autocorrect; cd ..",
-    "docgen": "docgen --api WSSplashScreenPlugin --output-readme README.md",
-    "release": "standard-version",
-    "push": "git push --follow-tags origin main && npm publish"
-  },
   "author": "Aparajita Fishman",
   "license": "MIT",
-  "devDependencies": {
-    "@aparajita/capacitor-docgen": "^0.0.10-3",
-    "@ionic/prettier-config": "^1.0.1",
-    "@ionic/swiftlint-config": "^1.1.2",
-    "@rollup/plugin-commonjs": "^18.0.0",
-    "@rollup/plugin-node-resolve": "^11.2.1",
-    "nodemon": "^2.0.7",
-    "prettier": "^2.2.1",
-    "prettier-plugin-java": "^1.0.2",
-    "rimraf": "^3.0.2",
-    "rollup": "^2.44.0",
-    "swiftlint": "^1.0.1",
-    "typescript": "~4.2.3"
-  },
-  "dependencies": {
-    "@capacitor/android": "^2.4.7",
-    "@capacitor/core": "^2.4.7",
-    "@capacitor/ios": "^2.4.7"
+  "main": "dist/plugin.cjs.js",
+  "module": "dist/esm/index.js",
+  "types": "dist/esm/index.d.ts",
+  "unpkg": "dist/plugin.js",
+  "engines": {
+    "node": ">=16.15.1"
   },
   "files": [
-    "dist/esm/*.d.ts",
-    "dist/esm/*.js",
-    "ios/Plugin",
-    "ios/Podfile",
-    "ios/Podfile.lock",
+    "android/src/main/",
     "android/build.gradle",
-    "android/gradle.properties",
-    "android/settings.gradle",
-    "android/src/main",
-    "*.podspec"
+    "dist/",
+    "ios/Plugin/",
+    "*.podspec",
+    "LICENSE"
   ],
+  "scripts": {
+    "clean": "rimraf dist",
+    "extract-info": "node scripts/extractPackageInfo.js",
+    "lint.eslint": "eslint --fix --cache --ext .js,.cjs,.mjs,.ts --max-warnings 0",
+    "lint.prettier": "prettier --write --cache --list-different '**/*{.ts,.js,.mjs,.md,.json,.yaml,.java}'",
+    "lint.tsc": "tsc --noEmit",
+    "lint.swift": "swiftly ios",
+    "lint": "pnpm lint.eslint . && pnpm lint.prettier . && pnpm lint.tsc && pnpm lint.swift",
+    "prebuilder": "pnpm clean && pnpm extract-info",
+    "builder": "tsc ${SOURCE_MAP:-} && rollup -c rollup.config.mjs",
+    "prebuild": "pnpm lint",
+    "build": "pnpm builder",
+    "build.dev": "SOURCE_MAP=--sourceMap pnpm build",
+    "watch": "nodemon --exec 'SOURCE_MAP=--sourceMap pnpm builder'",
+    "docgen": "docgen --api SplashScreenPlugin --output-readme README.md && docgen-format && pnpm lint.prettier README.md",
+    "open.ios": "open ios/Plugin.xcworkspace",
+    "open.android": "open -b com.google.android.studio android",
+    "verify.ios": "cd ios && pod install && xcodebuild -workspace Plugin.xcworkspace -scheme Plugin -quiet && cd ..",
+    "verify.android": "cd android && ./gradlew clean build test && cd ..",
+    "verify": "pnpm verify.ios && pnpm verify.android",
+    "prepare": "husky install",
+    "prerelease": "scripts/ensure-clean.sh && pnpm build && pnpm docgen && git add README.md",
+    "release": "commit-and-tag-version --commit-all && git push --follow-tags && pnpm publish"
+  },
+  "commit-and-tag-version": {
+    "scripts": {
+      "postbump": "pnpm -s builder"
+    }
+  },
   "keywords": [
     "capacitor",
     "plugin",
     "native",
-    "ios",
-    "android",
     "splash",
-    "launch"
+    "splashscreen",
+    "splash screen"
   ],
   "capacitor": {
     "ios": {
@@ -69,13 +64,51 @@
       "src": "android"
     }
   },
-  "prettier": "@ionic/prettier-config",
   "swiftlint": "@ionic/swiftlint-config",
   "repository": {
     "type": "git",
-    "url": "https://github.com/aparajita/capacitor-splash-screen"
+    "url": "https://github.com/aparajita/capacitor-splash-screen.git"
   },
   "bugs": {
     "url": "https://github.com/aparajita/capacitor-splash-screen/issues"
+  },
+  "devDependencies": {
+    "@aparajita/capacitor-docgen": "github:aparajita/capacitor-docgen",
+    "@aparajita/capacitor-docgen-format": "github:aparajita/capacitor-docgen-format",
+    "@aparajita/eslint-config-base": "^1.1.5",
+    "@aparajita/prettier-config": "^1.0.0",
+    "@aparajita/swiftly": "^1.0.4",
+    "@capacitor/cli": "^4.3.0",
+    "@commitlint/cli": "^17.1.2",
+    "@commitlint/config-conventional": "^17.1.0",
+    "@ionic/swiftlint-config": "^1.1.2",
+    "@rollup/plugin-json": "^4.1.0",
+    "@types/node": "^18.8.1",
+    "@typescript-eslint/eslint-plugin": "^5.39.0",
+    "@typescript-eslint/parser": "^5.39.0",
+    "commit-and-tag-version": "^10.1.0",
+    "eslint": "^8.24.0",
+    "eslint-config-prettier": "^8.5.0",
+    "eslint-config-standard": "^17.0.0",
+    "eslint-import-resolver-typescript": "^3.5.1",
+    "eslint-plugin-import": "^2.26.0",
+    "eslint-plugin-n": "^15.3.0",
+    "eslint-plugin-prettier": "^4.2.1",
+    "eslint-plugin-promise": "^6.0.1",
+    "husky": "^8.0.1",
+    "nodemon": "^2.0.20",
+    "prettier": "^2.7.1",
+    "prettier-plugin-java": "^1.6.2",
+    "rimraf": "^3.0.2",
+    "rollup": "^2.79.1",
+    "swiftlint": "^1.0.1",
+    "typescript": "~4.8.4"
+  },
+  "dependencies": {
+    "@aparajita/capacitor-logger": "latest",
+    "@capacitor/android": "^4.3.0",
+    "@capacitor/app": "^4.0.1",
+    "@capacitor/core": "^4.3.0",
+    "@capacitor/ios": "^4.3.0"
   }
 }

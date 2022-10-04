@@ -1,6 +1,6 @@
 //
 //  Storyboard.m
-//  WillsubCapacitorSplashscreen
+//  CapacitorSplashscreen
 //
 //  Created by Aparajita on 10/23/20.
 //
@@ -12,7 +12,7 @@
 
 +(UIStoryboard *) getStoryboardNamed:(NSString *) name {
   @try {
-    return [UIStoryboard storyboardWithName:name bundle:nil];
+    return [UIStoryboard storyboardWithName:[name stringByDeletingPathExtension] bundle:nil];
   } @catch (NSException *exception) {
     return nil;
   }

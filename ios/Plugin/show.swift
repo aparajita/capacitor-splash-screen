@@ -1,83 +1,66 @@
 //
-//  ShowSplash.swift
-//  WillsubCapacitorSplashscreen
+//  show.swift
+//  CapacitorSplashscreen
 //
 //  Created by Aparajita on 10/13/20.
 //
 
 import Capacitor
 
-extension WSSplashScreen {
-  static let contentModeMap: [String: UIView.ContentMode] = [
-    "fill": .scaleToFill,
-    "aspectFill": .scaleAspectFill,
-    "fit": .scaleAspectFit,
-    "center": .center,
-    "top": .top,
-    "bottom": .bottom,
-    "left": .left,
-    "right": .right,
-    "topLeft": .topLeft,
-    "topRight": .topRight,
-    "bottomLeft": .bottomLeft,
-    "bottomRight": .bottomRight
-  ]
-
-  func showOnLaunch() {
-    let options = ShowOptions(withPlugin: self, pluginCall: nil, isLaunchSplash: true)
-    logger.debug("show at launch:", options)
-    showSplash(withOptions: options, pluginCall: nil)
+extension SplashScreen {
+  func showLaunchScreen() {
+    let options = ShowOptions(withPlugin: self)
+    logger?.debug("showOnLaunch(): \(String(describing: options))")
+    launchOptions = options
+    show(withOptions: options, pluginCall: nil)
   }
 
-  func showSplash(withOptions options: ShowOptions, pluginCall call: CAPPluginCall?) {
+  func show(withOptions options: ShowOptions, pluginCall call: CAPPluginCall?) {
+    guard !isActive else {
+      postError(call: call, message: "A splash screen is already active", code: ErrorType.alreadyActive)
+      return
+    }
+
     // We have to use the main thread to show something over the Ionic web view
     DispatchQueue.main.async {
-      self.buildViews(forPluginCall: call)
+      // For launch screens it will default to "*" because call is nil
+      let source = Config.getString("source", inOptions: call?.options ?? [:]) ?? kDefaultSource
+      self.buildView(forPluginCall: call, fromSource: source)
 
-      // If buildViews() failed, splashView will be nil
+      // If buildView() failed, splashView will be nil
       guard let splashView = self.splashView else {
-        return
-      }
+        let message = "No storyboard named \"\(source)\" found"
 
-      guard let view = self.bridge?.viewController.view else {
-        return
-      }
-
-      // Remove any existing color
-      splashView.backgroundColor = nil
-
-      if let color = options.backgroundColor {
-        if let backgroundColor = self.makeUIColor(fromString: color) {
-          splashView.backgroundColor = backgroundColor
+        if let call = call {
+          call.reject(message, ErrorType.notFound.rawValue)
+        } else {
+          self.logger?.error(message)
         }
+
+        return
       }
+
+      guard let view = self.bridge?.viewController?.view else {
+        return
+      }
+
+      self.isActive = true
 
       // Size the splash to the screen
       splashView.frame = view.frame
 
-      // If the splash is an image, set its scale/position now
-      self.setupImageView(splashView, pluginCall: call)
-
       /*
-       * NOTE: When we are showing the splash during launch, fadeInDuration does not actually
-       * come into play, because the splashView alpha is already 1. If we set it to 0 before
-       * the animation, after the iOS launch screen disappears there would be an empty screen
-       * over which splashView would animate. Since this is unlikely to be the intended effect,
-       * we leave the splashView alpha at 1, and then iOS performs a short cross dissolve
-       * between the iOS launch screen and the splashView, which is invisible if they are identical.
+       * NOTE: iOS performs a short cross dissolve between the iOS launch screen and the
+       * splashView, which is (hopefully) unnoticeable if they are both visible.
        */
-      if options.isLaunchSplash {
+      if self.isLaunchSplash {
         splashView.alpha = 1
       } else {
-        splashView.alpha = CGFloat(self.getConfigDouble(withKeyPath: "startAlpha", pluginCall: call) ?? 0.0)
+        splashView.alpha = 0
       }
 
       // Now add the splash to the container view
       view.addSubview(splashView)
-
-      // If there is a spinner, add it on top of the splash
-      self.setupSpinner(inView: view, pluginCall: call)
-
       self.fadeInSplash(withOptions: options, pluginCall: call)
     }
   }
@@ -85,25 +68,13 @@ extension WSSplashScreen {
   func fadeInSplash(withOptions options: ShowOptions, pluginCall call: CAPPluginCall?) {
     // swiftlint doesn't like nested trailing closures, so we define this separately
     let onAnimationEnd: (Bool) -> Void = { _ in
-      self.isVisible = true
-
-      if options.autoHide {
-        DispatchQueue.main.asyncAfter(
-          deadline: DispatchTime.now() + options.showDuration
-        ) {
-          var hideOptions = HideOptions(plugin: self, call: call)
-
-          // If auto-hiding, the delay is not used
-          hideOptions.delay = 0
-
-          self.hideSplash(withOptions: hideOptions, pluginCall: call)
-        }
-      } else {
-        call?.success()
-      }
+      call?.resolve()
     }
 
-    callBeforeShowHook(withCall: call)
+    if isLaunchSplash {
+      onAnimationEnd(true)
+      return
+    }
 
     UIView.animate(
       withDuration: options.fadeInDuration,
@@ -111,80 +82,13 @@ extension WSSplashScreen {
       options: [.overrideInheritedOptions, .curveLinear],
       animations: {
         self.splashView?.alpha = 1
-        self.spinner?.alpha = 1
       },
       completion: onAnimationEnd
     )
   }
 
-  func setupImageView(_ view: UIView, pluginCall call: CAPPluginCall?) {
-    guard viewInfo.image != nil else {
-      return
-    }
-
-    var contentMode: UIView.ContentMode = .scaleAspectFill
-
-    if let configMode = getConfigString(withKeyPath: "iosImageDisplayMode", pluginCall: call),
-       let mode = WSSplashScreen.contentModeMap[configMode] {
-      contentMode = mode
-    }
-
-    view.contentMode = contentMode
-  }
-
-  func setupSpinner(inView view: UIView, pluginCall call: CAPPluginCall?) {
-    guard let showSpinner = getConfigBool(withKeyPath: "showSpinner", pluginCall: call),
-          showSpinner
-    else {
-      return
-    }
-
-    if self.spinner == nil {
-      self.spinner = UIActivityIndicatorView()
-    }
-
-    guard let spinner = self.spinner else {
-      return
-    }
-
-    // By default it's invisible, we want it to fade in with the splash view
-    spinner.alpha = 0
-
-    // We will use constraints to position it
-    spinner.translatesAutoresizingMaskIntoConstraints = false
-
-    if let spinnerStyle = getConfigString(withKeyPath: "iosSpinnerStyle", pluginCall: call) {
-      switch spinnerStyle.lowercased() {
-      case "small":
-        spinner.style = .white
-      default:
-        spinner.style = .whiteLarge
-      }
-    }
-
-    // Reset the color
-    spinner.color = nil
-
-    if let spinnerColor = getConfigString(withKeyPath: "spinnerColor", pluginCall: call),
-       let uiColor = makeUIColor(fromString: spinnerColor) {
-      spinner.color = uiColor
-    }
-
-    view.addSubview(spinner)
-    spinner.centerXAnchor.constraint(equalTo: view.centerXAnchor).isActive = true
-    spinner.centerYAnchor.constraint(equalTo: view.centerYAnchor).isActive = true
-    spinner.startAnimating()
-  }
-
-  func makeUIColor(fromString string: String) -> UIColor? {
-    if !string.isEmpty {
-      if let uiColor = UIColor.from(string: string) {
-        return uiColor
-      }
-
-      logger.warn("Invalid color: \(string)")
-    }
-
-    return nil
+  func animate(withCall call: CAPPluginCall, wait: Double) {
+    animatePluginCall = call
+    dispatchEvent(isLaunchSplash ? .animateLaunch : .animate, wait: wait, withCall: call)
   }
 }

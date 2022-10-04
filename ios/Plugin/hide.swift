@@ -1,17 +1,21 @@
 //
 //  hide.swift
-//  WillsubCapacitorSplashscreen
+//  CapacitorSplashscreen
 //
 //  Created by Aparajita on 10/13/20.
 //
 
 import Capacitor
 
-extension WSSplashScreen {
-  func hideSplash(withOptions options: HideOptions, pluginCall call: CAPPluginCall?) {
-    guard isVisible else {
+extension SplashScreen {
+  func hide(withOptions options: HideOptions, pluginCall call: CAPPluginCall?) {
+    // If we are in the process of hiding, don't do anything
+    guard !isHiding else {
+      call?.resolve()
       return
     }
+
+    isHiding = true
 
     DispatchQueue.main.async {
       UIView.animate(
@@ -20,11 +24,10 @@ extension WSSplashScreen {
         options: [.curveLinear],
         animations: {
           self.splashView?.alpha = 0
-          self.spinner?.alpha = 0
         },
         completion: { _ in
           self.tearDown()
-          call?.success()
+          call?.resolve()
         }
       )
     }
@@ -34,9 +37,8 @@ extension WSSplashScreen {
    * Clean up after the splash is hidden
    */
   func tearDown() {
-    isVisible = false
+    isActive = false
+    isHiding = false
     splashView?.removeFromSuperview()
-    spinner?.removeFromSuperview()
-    callAfterShowHook()
   }
 }

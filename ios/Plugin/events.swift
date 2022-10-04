@@ -1,37 +1,26 @@
 //
 //  animate.swift
-//  WillsubCapacitorSplashscreen
+//  CapacitorSplashscreen
 //
 //  Created by Aparajita on 10/25/20.
 //
 
 import Capacitor
 
-private var animatePluginCall: CAPPluginCall?
-
-extension WSSplashScreen {
+public extension SplashScreen {
   enum EventType: String {
-    case beforeShow
-    case afterShow
     case animate
+    case animateLaunch
   }
 
-  func callBeforeShowHook(withCall call: CAPPluginCall?) {
-    dispatchEvent(.beforeShow, withCall: call)
+  struct AnimationCallbacks {
+    public let done: () -> Void
+    public let error: (String, ErrorType) -> Void
   }
 
-  func callAfterShowHook() {
-    dispatchEvent(.afterShow)
-  }
-
-  func animate(withCall call: CAPPluginCall) {
-    animatePluginCall = call
-    dispatchEvent(.animate, withCall: call)
-  }
-
-  func dispatchEvent(_ event: EventType, withCall call: CAPPluginCall? = nil) {
+  internal func dispatchEvent(_ event: EventType, wait: Double = 0, withCall call: CAPPluginCall? = nil) {
     guard eventHandler != nil else {
-      logger.warn("onSplashScreenEvent() was not found in the app delegate")
+      logger?.warn("onSplashScreenEvent() was not found in the app delegate")
       return
     }
 
@@ -40,35 +29,39 @@ extension WSSplashScreen {
       animatePluginCall?.resolve()
     }
 
+    func error(_ message: String, code: ErrorType) {
+      tearDown()
+      animatePluginCall?.reject(message, code.rawValue)
+    }
+
+    let callbacks = AnimationCallbacks(done: done, error: error)
+    var options: Config.CallOptions = [:]
     var delay = 0.0
 
     if let call = call {
-      delay = WSSplashScreen.toSeconds(call.getDouble("delay") ?? 0)
+      options = call.options
+
+      // Apply any delay before the animation
+      if let startDelay = Config.getDouble(kDelayOption, inOptions: options) {
+        delay = SplashScreen.toSeconds(startDelay)
+        options.removeValue(forKey: kDelayOption)
+      }
     }
 
     DispatchQueue.main.asyncAfter(
-      deadline: DispatchTime.now() + delay) {
-      if let delegate = UIApplication.shared.delegate,
-         let eventHandler = self.eventHandler {
-        var options: [AnyHashable: Any]?
+      deadline: DispatchTime.now() + delay + wait) {
+        if let delegate = UIApplication.shared.delegate,
+           let eventHandler = self.eventHandler {
+          let params: [String: Any?] = [
+            "source": self.source,
+            "splashView": self.splashView,
+            "plugin": self,
+            "options": options,
+            "callbacks": callbacks
+          ]
 
-        if let call = call {
-          options = call.options
+          delegate.perform(eventHandler, with: event.rawValue, with: params)
         }
-
-        var params: [String: Any?] = [
-          "plugin": self,
-          "splashView": self.splashView as Any,
-          "spinner": self.spinner as Any,
-          "options": options as Any?
-        ]
-
-        if event == .animate {
-          params["done"] = done
-        }
-
-        delegate.perform(eventHandler, with: event.rawValue, with: params)
       }
-    }
   }
 }
