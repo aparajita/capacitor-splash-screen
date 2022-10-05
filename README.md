@@ -29,13 +29,12 @@ Starting with Android 12, Android provides a backward-compatible API for configu
 
 - Silky smooth, seamless transitions from the system splash screen to your app.
 - Full set of hooks for implementing custom animation. 🚀
-- Full support for localization. :brazil: :fr: :jp:
-- Full support for dark mode. :first_quarter_moon:
+- Full support for localization. 🇺🇸🇧🇷
+- Full support for dark mode. 🌗
 - Full support for Android 12+ splash screens.
-
-- Splash screen [workshop app](https://github.com/aparajita/capacitor-splash-screen-demo) lets you test splash screens and tweak timing parameters.
-- Complete control over timing when testing splash screens: delay, fade in, duration, fade out. :stopwatch:
-- Specify time units in seconds or milliseconds.
+- Splash screen [workshop app](https://github.com/aparajita/capacitor-splash-screen-demo) lets you test splash screens and tweak timing parameters. 👀
+- Complete control over timing when testing splash screens: delay, fade in, duration, fade out. ⏱
+- Specify time units in seconds or milliseconds. ⌛
 
 ## Installation
 
