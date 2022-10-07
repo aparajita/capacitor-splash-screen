@@ -39,7 +39,7 @@ Starting with Android 12, Android provides a backward-compatible API for configu
 ## Installation
 
 ```shell
-pnpm add @aparajita/capacitor-splash-screen  # npm install, yarn add
+pnpm add @aparajita/capacitor-splash-screen @aparajita/capacitor-logger  # npm install, yarn add
 ```
 
 ## Launch screen configuration
