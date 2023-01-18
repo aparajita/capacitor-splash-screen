@@ -9,9 +9,17 @@ import Capacitor
 
 extension SplashScreen {
   func showLaunchScreen() {
+    parentView = bridge?.viewController?.view
+
+    if parentView == nil {
+      logger?.error("Could not get bridge view")
+      return
+    }
+
     let options = ShowOptions(withPlugin: self)
     logger?.debug("showOnLaunch(): \(String(describing: options))")
     launchOptions = options
+
     show(withOptions: options, pluginCall: nil)
   }
 
@@ -21,30 +29,34 @@ extension SplashScreen {
       return
     }
 
+    // For launch screens it will default to "*" because call is nil
+    let source = Config.getString("source", inOptions: call?.options ?? [:]) ?? kDefaultSource
+    buildView(forPluginCall: call, fromSource: source)
+
+    // If buildView() failed, splashView will be nil
+    guard let splashView = splashView else {
+      let message = "No storyboard named \"\(source)\" found"
+
+      if let call = call {
+        call.reject(message, ErrorType.notFound.rawValue)
+      } else {
+        logger?.error(message)
+      }
+
+      return
+    }
+
+    guard let view = parentView else {
+      return
+    }
+
     // We have to use the main thread to show something over the Ionic web view
-    DispatchQueue.main.async {
-      // For launch screens it will default to "*" because call is nil
-      let source = Config.getString("source", inOptions: call?.options ?? [:]) ?? kDefaultSource
-      self.buildView(forPluginCall: call, fromSource: source)
-
-      // If buildView() failed, splashView will be nil
-      guard let splashView = self.splashView else {
-        let message = "No storyboard named \"\(source)\" found"
-
-        if let call = call {
-          call.reject(message, ErrorType.notFound.rawValue)
-        } else {
-          self.logger?.error(message)
-        }
-
+    DispatchQueue.main.async { [weak self] in
+      guard let this = self else {
         return
       }
 
-      guard let view = self.bridge?.viewController?.view else {
-        return
-      }
-
-      self.isActive = true
+      this.isActive = true
 
       // Size the splash to the screen
       splashView.frame = view.frame
@@ -53,7 +65,7 @@ extension SplashScreen {
        * NOTE: iOS performs a short cross dissolve between the iOS launch screen and the
        * splashView, which is (hopefully) unnoticeable if they are both visible.
        */
-      if self.isLaunchSplash {
+      if this.isLaunchSplash {
         splashView.alpha = 1
       } else {
         splashView.alpha = 0
@@ -61,7 +73,7 @@ extension SplashScreen {
 
       // Now add the splash to the container view
       view.addSubview(splashView)
-      self.fadeInSplash(withOptions: options, pluginCall: call)
+      this.fadeInSplash(withOptions: options, pluginCall: call)
     }
   }
 

@@ -71,7 +71,7 @@ public class SplashScreen: CAPPlugin {
 
   struct ViewInfo {
     var source = ""
-    var storyboard: UIStoryboard?
+    var storyboard: UIViewController?
   }
 
   static var launchTime: Date?
@@ -79,6 +79,7 @@ public class SplashScreen: CAPPlugin {
   var launchOptions: ShowOptions?
   var source = ""
   var viewInfo = ViewInfo()
+  var parentView: UIView?
   var splashView: UIView?
   var isActive: Bool = false
   var isHiding: Bool = false
