@@ -1,18 +1,11 @@
 //
-//  setupViews.swift
+//  makeSplashView.swift
 //  CapacitorSplashscreen
 //
 //  Created by Aparajita on 10/13/20.
 //
 
 import Capacitor
-
-extension NSObject {
-  func clone<T: NSObject>() throws -> T? {
-    let data = try NSKeyedArchiver.archivedData(withRootObject: self, requiringSecureCoding: false)
-    return try NSKeyedUnarchiver.unarchiveTopLevelObjectWithData(data) as? T
-  }
-}
 
 extension SplashScreen {
   /*
@@ -57,9 +50,14 @@ extension SplashScreen {
    * Try to get the app's launch storyboard.
    */
   func checkForLaunchScreen() -> Bool {
-    if let name = CFBundleGetValueForInfoDictionaryKey(CFBundleGetMainBundle(), "UILaunchStoryboardName" as CFString),
-       let storyboard = name as? String {
-      return checkForStoryboard(named: storyboard)
+    if let name = Bundle.main.infoDictionary?["UILaunchStoryboardName"] as? String {
+      let storyboardName = name.replacingOccurrences(of: ".storyboard", with: "")
+
+      if let storyboard = UIStoryboard(name: storyboardName, bundle: nil).instantiateInitialViewController() {
+        viewInfo.source = storyboardName
+        viewInfo.storyboard = storyboard
+        return true
+      }
     }
 
     return false
@@ -71,34 +69,31 @@ extension SplashScreen {
   func checkForStoryboard(named name: String) -> Bool {
     if let storyboard = Storyboard.getNamed(name) {
       viewInfo.source = name
-      viewInfo.storyboard = storyboard
+      viewInfo.storyboard = storyboard.instantiateInitialViewController()
       return true
     }
 
     return false
   }
 
-  /*
-   * Given a storyboard name, attempt to instantiate the storyboard, then clone
-   * the top level view, which we will use as the splash view.
-   */
   func makeStoryboardSplashView(withCall call: CAPPluginCall?) {
-    // Technically this should never be nil, but it's an optional so we have to unwrap it
-    guard let storyboard = viewInfo.storyboard else {
-      return
-    }
-
-    let viewController = storyboard.instantiateInitialViewController()
     var error = ""
 
-    if let vcView = viewController?.view {
-      // Clone the view
-      splashView = try? vcView.clone()
+    if let storyboard = viewInfo.storyboard {
+      if let vcView = storyboard.view {
+        splashView = vcView
 
-      if splashView != nil {
-        logger?.info("Using storyboard \"\(viewInfo.source)\"")
-      } else {
-        error = "Unable to clone the \"\(viewInfo.source)\" storyboard view"
+        if splashView != nil {
+          logger?.info("Using storyboard \"\(viewInfo.source)\"")
+
+          // If this is a launch screen, set the webview background to the launch screen
+          // background so that there is not a flash of white color.
+          if isLaunchSplash {
+            parentView?.backgroundColor = splashView?.backgroundColor
+          }
+        } else {
+          error = "Unable to get the \"\(viewInfo.source)\" storyboard view"
+        }
       }
     } else {
       error = "Unable to instantiate the \"\(viewInfo.source)\" storyboard view controller"
