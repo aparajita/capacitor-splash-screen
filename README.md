@@ -2,6 +2,8 @@
 
 # capacitor-splash-screen&nbsp;&nbsp;[![npm version](https://badge.fury.io/js/@aparajita%2Fcapacitor-splash-screen.svg)](https://badge.fury.io/js/@aparajita%2Fcapacitor-splash-screen)
 
+### ❗️This package is no longer maintained. I don’t have the time to work on it, and now use the official splash screen plugin myself.
+
 This [Capacitor 4](https://capacitorjs.com) plugin is a replacement for the official [Splash Screen plugin](https://capacitorjs.com/docs/apis/splash-screen) and provides complete control over native splash screens, both automatically at launch and via code.
 
 👉 **NOTE:** This plugin does not work with Capacitor < 4.
